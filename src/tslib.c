@@ -533,7 +533,7 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->height = xf86SetIntOption(pInfo->options, "Height", 0);
 	if (priv->height <= 0)	priv->height = screenInfo.screens[0]->height;
 
-	s = xf86SetStrOption(pInfo->options, "Rotate", 0);
+	s = xf86SetStrOption(pInfo->options, "Rotate", NULL);
 	if (s) {
 		if (strcmp(s, "CW") == 0) {
 			priv->rotate = TSLIB_ROTATE_CW;
