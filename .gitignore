@@ -31,3 +31,20 @@
 # Debug files
 *.dSYM/
 *.su
+
+# generated files
+aclocal.m4
+config.h.in
+config.guess
+configure
+config.sub
+depcomp
+install-sh
+ltmain.sh
+Makefile
+Makefile.in
+man/Makefile
+man/Makefile.in
+src/Makefile
+src/Makefile.in
+missing
