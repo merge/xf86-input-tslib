@@ -130,7 +130,7 @@ ConvertProc( InputInfoPtr local,
 	return TRUE;
 }
 
-struct timeval TimevalDiff(struct timeval a, struct timeval b)
+static struct timeval TimevalDiff(struct timeval a, struct timeval b)
 {
 	struct timeval t;
 	t.tv_sec = a.tv_sec-b.tv_sec;
