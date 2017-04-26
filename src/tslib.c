@@ -103,8 +103,6 @@ KeyControlProc(DeviceIntPtr pDev, KeybdCtrl * ctrl)
 static void
 PointerControlProc(DeviceIntPtr dev, PtrCtrl * ctrl)
 {
-	ErrorF("%s\n", __FUNCTION__);
-	return;
 }
 
 static Bool
@@ -406,6 +404,8 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		xf86MotionHistoryAllocate(pInfo);
 #endif
 
+		if (!InitPtrFeedbackClassDeviceStruct(device, PointerControlProc))
+			return !Success;
 		break;
 
 	case DEVICE_ON:
@@ -435,6 +435,7 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
 	xfree(pInfo->private);
+	pInfo->private = NULL;
 	xf86DeleteInput(pInfo, 0);
 }
 
