@@ -1,4 +1,5 @@
 #  Copyright 2005 Adam Jackson.
+#  Copyright 2017 Martin Kepplinger.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -25,7 +26,8 @@ AC_INIT([xf86-input-tslib],[0.0.6],[https://bugs.freedesktop.org/enter_bug.cgi?p
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_CONFIG_MACRO_DIR([m4])
+AM_INIT_AUTOMAKE([dist-bzip2 dist-xz])
 
 AM_MAINTAINER_MODE
 
