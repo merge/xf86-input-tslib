@@ -75,6 +75,19 @@
 #define COLLECT_INPUT_OPTIONS(pInfo, options) xf86CollectInputOptions((pInfo), (options))
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 13
+static void
+xf86XInputSetScreen(InputInfoPtr	pInfo,
+		    int			screen_number,
+		    int			x,
+		    int			y)
+{
+    if (miPointerGetScreen(pInfo->dev) !=
+          screenInfo.screens[screen_number]) {
+	miPointerSetScreen(pInfo->dev, screen_number, x, y);
+    }
+}
+#endif
 
 enum { TSLIB_ROTATE_NONE=0, TSLIB_ROTATE_CW=270, TSLIB_ROTATE_UD=180, TSLIB_ROTATE_CCW=90 };
 
