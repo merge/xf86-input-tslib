@@ -48,7 +48,6 @@ man/Makefile.in
 src/Makefile
 src/Makefile.in
 missing
-autogen.sh
 autom4te.cache/
 compile
 config.h
