@@ -1,0 +1,46 @@
+.ds q \N'34'
+.TH TSLIB 4 "xf86-input-tslib 0.0.4" "X Version 11"
+.SH NAME
+tslib \- tslib input driver
+.SH SYNOPSIS
+.nf
+.B "Section \*qInputDevice\*q"
+.BI "  Identifier \*q" tslib \*q
+.B  "  Driver \*qtslib\*q"
+.BI "  Option \*qDevice\*q   \*q" /dev/event0 \*q
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B tslib
+is an tslib Xorg input driver. It supports touchscreen devices.
+.SH CONFIGURATION DETAILS
+Please refer to xorg.conf(5) for general configuration
+details and for options that can be used with all input drivers.  This
+section only covers configuration details specific to this driver.
+.PP
+Hal is now supported and allows the touchscreen to operate
+correctly without any need to change \*q/etc/X11/xorg.conf\*q.
+.SH BASIC CONFIGURATIONS
+If hal is not available, the following defaults may be sufficient:
+.PP
+.nf
+.B "Section \*qInputDevice\*q"
+.BI "  Identifier \*q" tslib \*q
+.B  "  Driver \*qtslib\*q"
+.BI  "  Option \*qDevice\*q    \*q" "/dev/event0" \*q
+.BI  "  Option \*qScreenNumber\*q  \*q" "0" \*q
+.BI  "  Option \*qWidth\*q \*q" "0" \*q
+.BI  "  Option \*qHeight\*q    \*q" "0" \*q
+.BI  "  Option \*qRotate\*q    \*q" "NONE" \*q
+.BI  "  Option \*qEmulateRightButton\*q    \*q" "0" \*q
+\ \ ...
+.B EndSection
+.SH "SEE ALSO"
+Xorg(1), xorg.conf(5), xorgconfig(1), Xserver(1), X(7).
+.SH AUTHORS
+Sascha Hauer <s.hauer@pengutronix.de>
+.fi
+Clement Chauplannaz, Thales e-Transactions <chauplac@gmail.com>
+.fi
+Michael Olbrich <m.olbrich@pengutronix.de>

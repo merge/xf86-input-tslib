@@ -1,0 +1,12 @@
+2009-10-19  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	Add various patches from downstream (debian and openWrt)
+
+2007-10-19  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	Port to Xorg 7.3
+
+2006-04-18  Sascha Hauer <s.hauer@pengutronix.de>
+
+	Initial version derived from the xf86-input-void driver
+	and modified for tslib.
