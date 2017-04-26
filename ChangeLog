@@ -1,3 +1,8 @@
+2017-04-26  Martin Kepplinger <martink@posteo.de>
+
+	xf86-input-tslib 0.0.7 includes the following changes:
+	- Add patches from downstream against 0.0.6
+
 2009-10-19  Michael Olbrich <m.olbrich@pengutronix.de>
 
 	Add various patches from downstream (debian and openWrt)
