@@ -2,6 +2,7 @@
 
 	xf86-input-tslib 0.0.7 includes the following changes:
 	- Add patches from downstream against 0.0.6
+	- autotools build system updates
 
 2009-10-19  Michael Olbrich <m.olbrich@pengutronix.de>
 
