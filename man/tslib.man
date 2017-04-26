@@ -1,5 +1,5 @@
 .ds q \N'34'
-.TH TSLIB 4 "xf86-input-tslib 0.0.4" "X Version 11"
+.TH TSLIB 4 "xf86-input-tslib 0.0.7" "X Version 11"
 .SH NAME
 tslib \- tslib input driver
 .SH SYNOPSIS
@@ -37,7 +37,7 @@ If hal is not available, the following defaults may be sufficient:
 \ \ ...
 .B EndSection
 .SH "SEE ALSO"
-Xorg(1), xorg.conf(5), xorgconfig(1), Xserver(1), X(7).
+Xorg(1), xorg.conf(5), xorgconfig(1), Xserver(1), X(7), ts.conf(5).
 .SH AUTHORS
 Sascha Hauer <s.hauer@pengutronix.de>
 .fi
