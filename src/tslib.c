@@ -82,28 +82,28 @@ xf86XInputSetScreen(InputInfoPtr	pInfo,
 		    int			x,
 		    int			y)
 {
-    if (miPointerGetScreen(pInfo->dev) !=
-          screenInfo.screens[screen_number]) {
-	miPointerSetScreen(pInfo->dev, screen_number, x, y);
-    }
+	if (miPointerGetScreen(pInfo->dev) !=
+	    screenInfo.screens[screen_number]) {
+		miPointerSetScreen(pInfo->dev, screen_number, x, y);
+	}
 }
 #endif
 
-enum { TSLIB_ROTATE_NONE=0, TSLIB_ROTATE_CW=270, TSLIB_ROTATE_UD=180, TSLIB_ROTATE_CCW=90 };
+enum { TSLIB_ROTATE_NONE = 0, TSLIB_ROTATE_CW = 270, TSLIB_ROTATE_UD = 180, TSLIB_ROTATE_CCW = 90 };
 
-enum button_state { BUTTON_NOT_PRESSED = 0, BUTTON_1_PRESSED = 1, BUTTON_3_CLICK = 3, BUTTON_3_CLICKED=4, BUTTON_EMULATION_OFF=-1 };
+enum button_state { BUTTON_NOT_PRESSED = 0, BUTTON_1_PRESSED = 1, BUTTON_3_CLICK = 3, BUTTON_3_CLICKED = 4, BUTTON_EMULATION_OFF = -1 };
 
 struct ts_priv {
 	XISBuffer *buffer;
 	struct tsdev *ts;
-	int lastx,lasty,lastp;
+	int lastx, lasty, lastp;
 	int screen_num;
 	int rotate;
 	int height;
 	int width;
 	enum button_state state;
 	struct timeval button_down_start;
-	int button_down_x,button_down_y;
+	int button_down_x, button_down_y;
 };
 
 static void
@@ -114,19 +114,19 @@ BellProc(int percent, DeviceIntPtr pDev, pointer ctrl, int unused)
 }
 
 static void
-KeyControlProc(DeviceIntPtr pDev, KeybdCtrl * ctrl)
+KeyControlProc(DeviceIntPtr pDev, KeybdCtrl *ctrl)
 {
 	ErrorF("%s\n", __FUNCTION__);
 	return;
 }
 
 static void
-PointerControlProc(DeviceIntPtr dev, PtrCtrl * ctrl)
+PointerControlProc(DeviceIntPtr dev, PtrCtrl *ctrl)
 {
 }
 
 static Bool
-ConvertProc( InputInfoPtr local,
+ConvertProc(InputInfoPtr local,
 			 int first,
 			 int num,
 			 int v0,
@@ -136,7 +136,7 @@ ConvertProc( InputInfoPtr local,
 			 int v4,
 			 int v5,
 			 int *x,
-			 int *y )
+			 int *y)
 {
 	*x = v0;
 	*y = v1;
@@ -160,19 +160,19 @@ static void ReadInput (InputInfoPtr local)
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
 	struct ts_sample samp;
 	int ret;
-	int x,y;
+	int x, y;
 	ScrnInfoPtr pScrn = xf86Screens[priv->screen_num];
 	Rotation rotation = rrGetScrPriv (pScrn->pScreen) ? RRGetRotation(pScrn->pScreen) : RR_Rotate_0;
 	struct timeval now;
 
-	while((ret = ts_read(priv->ts, &samp, 1)) == 1) {
+	while ((ret = ts_read(priv->ts, &samp, 1)) == 1) {
 		gettimeofday(&now, NULL);
-		struct timeval pressureTime = TimevalDiff(now,priv->button_down_start);
+		struct timeval pressureTime = TimevalDiff(now, priv->button_down_start);
 
-		if(samp.pressure) {
+		if (samp.pressure) {
 			int tmp_x = samp.x;
 
-			switch(priv->rotate) {
+			switch (priv->rotate) {
 			case TSLIB_ROTATE_CW:	samp.x = samp.y;
 						samp.y = priv->width - tmp_x;
 						break;
@@ -187,7 +187,7 @@ static void ReadInput (InputInfoPtr local)
 
 			tmp_x = samp.x;
 
-			switch(rotation) {
+			switch (rotation) {
 			case RR_Rotate_90:
 				samp.x = (priv->height - samp.y - 1) * priv->width / priv->height;
 				samp.y = tmp_x * priv->height / priv->width;
@@ -222,16 +222,16 @@ static void ReadInput (InputInfoPtr local)
 		 * if still pressed do nothing until the pressure is released
 		 */
 		switch (priv->state) {
-			 case BUTTON_EMULATION_OFF :
-				 if(priv->lastp != samp.pressure) {
+			 case BUTTON_EMULATION_OFF:
+				if (priv->lastp != samp.pressure) {
 					 priv->lastp = samp.pressure;
 					 xf86PostButtonEvent(local->dev, TRUE,
 						 1, !!samp.pressure, 0, 2,
 						 priv->lastx,
 						 priv->lasty);
-				 }
-				 break;
-			case BUTTON_NOT_PRESSED :
+				}
+				break;
+			case BUTTON_NOT_PRESSED:
 				if (samp.pressure) {
 					priv->button_down_start = now;
 					priv->button_down_y = samp.y;
@@ -244,13 +244,12 @@ static void ReadInput (InputInfoPtr local)
 						priv->lasty);
 				}
 				break;
-			case BUTTON_1_PRESSED :
+			case BUTTON_1_PRESSED:
 				if (samp.pressure) {
 					//ErrorF("%d %d ",pressureTime.tv_sec,pressureTime.tv_usec);
 					if ((((double)pressureTime.tv_sec)+(((double)pressureTime.tv_usec)*1e-6) > TIME23RDBUTTON) &&
 					   (abs(priv->lastx-priv->button_down_x) < MOVEMENT23RDBUTTON &&
-					    abs(priv->lasty-priv->button_down_y) < MOVEMENT23RDBUTTON))
-					{
+					    abs(priv->lasty-priv->button_down_y) < MOVEMENT23RDBUTTON)) {
 						//ErrorF("b1 up");
 						xf86PostButtonEvent(local->dev, TRUE,
 							priv->state, FALSE, 0, 2,
@@ -279,7 +278,7 @@ static void ReadInput (InputInfoPtr local)
 					priv->state = BUTTON_NOT_PRESSED;
 				}
 				break;
-			case BUTTON_3_CLICK :
+			case BUTTON_3_CLICK:
 				//ErrorF("b3 up");
 				xf86PostButtonEvent(local->dev, TRUE,
 					priv->state, FALSE, 0, 2,
@@ -287,7 +286,7 @@ static void ReadInput (InputInfoPtr local)
 					priv->lasty);
 				priv->state = BUTTON_3_CLICKED;
 				break;
-			case BUTTON_3_CLICKED :
+			case BUTTON_3_CLICKED:
 				if (!samp.pressure) {
 					//ErrorF("b3 free");
 					priv->state = BUTTON_NOT_PRESSED;
@@ -307,8 +306,7 @@ static void ReadInput (InputInfoPtr local)
 static void xf86TslibInitButtonLabels(Atom *labels, int nlabels)
 {
 	memset(labels, 0, nlabels * sizeof(Atom));
-	switch(nlabels)
-	{
+	switch (nlabels) {
 		default:
 		case 7:
 			labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
@@ -382,7 +380,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 			return !Success;
 		}
 
-		switch(priv->rotate) {
+		switch (priv->rotate) {
 		case TSLIB_ROTATE_CW:
 		case TSLIB_ROTATE_CCW:
 			axiswidth = priv->height;
@@ -404,7 +402,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 					       0,		/* min_res */
 					       axiswidth	/* max_res */
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-					       ,Absolute
+					       , Absolute
 #endif
 					       );
 
@@ -418,12 +416,12 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 					       0,		/* min_res */
 					       axisheight	/* max_res */
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-					       ,Absolute
+					       , Absolute
 #endif
 					       );
 
-		if (InitProximityClassDeviceStruct (device) == FALSE) {
-			ErrorF ("Unable to allocate EVTouch touchscreen ProximityClassDeviceStruct\n");
+		if (InitProximityClassDeviceStruct(device) == FALSE) {
+			ErrorF("Unable to allocate EVTouch touchscreen ProximityClassDeviceStruct\n");
 			return !Success;
 		}
 
@@ -460,6 +458,7 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	struct ts_priv *priv = (struct ts_priv *)(pInfo->private);
 	ErrorF("%s\n", __FUNCTION__);
+
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
 	free(pInfo->private);
@@ -486,9 +485,9 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	InputInfoPtr pInfo;
 #endif
 
-	priv = calloc (1, sizeof (struct ts_priv));
-        if (!priv)
-                return BadValue;
+	priv = calloc(1, sizeof (struct ts_priv));
+	if (!priv)
+		return BadValue;
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	if (!(pInfo = xf86AllocateInput(drv, 0))) {
@@ -525,13 +524,15 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	COLLECT_INPUT_OPTIONS(pInfo, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-	priv->screen_num = xf86SetIntOption(pInfo->options, "ScreenNumber", 0 );
+	priv->screen_num = xf86SetIntOption(pInfo->options, "ScreenNumber", 0);
 
 	priv->width = xf86SetIntOption(pInfo->options, "Width", 0);
-	if (priv->width <= 0)	priv->width = screenInfo.screens[0]->width;
+	if (priv->width <= 0)
+		priv->width = screenInfo.screens[0]->width;
 
 	priv->height = xf86SetIntOption(pInfo->options, "Height", 0);
-	if (priv->height <= 0)	priv->height = screenInfo.screens[0]->height;
+	if (priv->height <= 0)
+		priv->height = screenInfo.screens[0]->height;
 
 	s = xf86SetStrOption(pInfo->options, "Rotate", NULL);
 	if (s) {
@@ -549,22 +550,22 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
- 	s = xf86CheckStrOption(dev->commonOptions, "path", NULL);
+	s = xf86CheckStrOption(dev->commonOptions, "path", NULL);
 #else
 	s = xf86CheckStrOption(pInfo->options, "path", NULL);
 #endif
-  	if (!s)
+	if (!s)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 		s = xf86CheckStrOption(dev->commonOptions, "Device", NULL);
 #else
 		s = xf86CheckStrOption(pInfo->options, "Device", NULL);
 #endif
- 
+
 	priv->ts = ts_open(s, 1);
 	free(s);
 
 	if (!priv->ts) {
-		ErrorF("ts_open failed (device=%s)\n",s);
+		ErrorF("ts_open failed (device=%s)\n", s);
 		xf86DeleteInput(pInfo, 0);
 		return BadValue;
 	}
@@ -578,9 +579,8 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->fd = ts_fd(priv->ts);
 
 	priv->state = BUTTON_NOT_PRESSED;
-	if (xf86SetIntOption(pInfo->options, "EmulateRightButton", 0) == 0) {
+	if (xf86SetIntOption(pInfo->options, "EmulateRightButton", 0) == 0)
 		priv->state = BUTTON_EMULATION_OFF;
-	}
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	/* Mark the device configured */
@@ -624,7 +624,8 @@ static void xf86TslibUnplug(pointer p)
  *
  * called when the module subsection is found in XF86Config
  */
-static pointer xf86TslibPlug(pointer module, pointer options, int *errmaj, int *errmin)
+static pointer xf86TslibPlug(pointer module, pointer options, int *errmaj,
+			     int *errmin)
 {
 	static Bool Initialised = FALSE;
 
