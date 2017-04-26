@@ -89,6 +89,10 @@ xf86XInputSetScreen(InputInfoPtr	pInfo,
 }
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
+#define HAVE_THREADED_INPUT	1
+#endif
+
 enum { TSLIB_ROTATE_NONE = 0, TSLIB_ROTATE_CW = 270, TSLIB_ROTATE_UD = 180, TSLIB_ROTATE_CCW = 90 };
 
 enum button_state { BUTTON_NOT_PRESSED = 0, BUTTON_1_PRESSED = 1, BUTTON_3_CLICK = 3, BUTTON_3_CLICKED = 4, BUTTON_EMULATION_OFF = -1 };
@@ -435,8 +439,11 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		break;
 
 	case DEVICE_ON:
+#if HAVE_THREADED_INPUT
+		xf86AddEnabledDevice(pInfo);
+#else
 		AddEnabledDevice(pInfo->fd);
-
+#endif
 		device->public.on = TRUE;
 		break;
 
