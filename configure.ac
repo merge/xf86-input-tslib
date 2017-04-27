@@ -41,6 +41,11 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
 
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([you must install xorg-macros before running autoconf/autogen.
+  Hint: either install from source, git://anongit.freedesktop.org/xorg/util/macros or,
+  depending on you distribution, try package 'xutils-dev' or 'xorg-x11-util-macros'])])
+
 AH_TOP([#include "xorg-server.h"])
 
 #AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
