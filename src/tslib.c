@@ -113,14 +113,18 @@ struct ts_priv {
 static void
 BellProc(int percent, DeviceIntPtr pDev, pointer ctrl, int unused)
 {
+#ifdef DEBUG
 	ErrorF("%s\n", __FUNCTION__);
+#endif
 	return;
 }
 
 static void
 KeyControlProc(DeviceIntPtr pDev, KeybdCtrl *ctrl)
 {
+#ifdef DEBUG
 	ErrorF("%s\n", __FUNCTION__);
+#endif
 	return;
 }
 
@@ -347,7 +351,9 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 	int i, axiswidth, axisheight;
 	struct ts_priv *priv;
 
+#ifdef DEBUG
 	ErrorF("%s\n", __FUNCTION__);
+#endif
 	pInfo = device->public.devicePrivate;
 	priv = pInfo->private;
 
@@ -464,7 +470,9 @@ static void
 xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	struct ts_priv *priv = (struct ts_priv *)(pInfo->private);
+#ifdef DEBUG
 	ErrorF("%s\n", __FUNCTION__);
+#endif
 
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
