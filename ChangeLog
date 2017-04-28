@@ -1,8 +1,14 @@
-2017-04-26  Martin Kepplinger <martink@posteo.de>
+2017-04-28  Martin Kepplinger <martink@posteo.de>
 
 	xf86-input-tslib 0.0.7 includes the following changes:
-	- Add patches from downstream against 0.0.6
-	- autotools build system updates
+	* Add patches from downstream against 0.0.6. This includes important
+	  compatibility updates
+
+	* autotools build system updates. This ensures fresh generated tarballs
+
+	* A default 50-tslib.conf for xorg.conf.d added
+
+	* xorg-tslib.pc pkgconfig file added
 
 2009-10-19  Michael Olbrich <m.olbrich@pengutronix.de>
 
