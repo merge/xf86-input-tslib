@@ -46,6 +46,7 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([you must install xorg-macros before running autoconf/autogen.
   Hint: either install from source, git://anongit.freedesktop.org/xorg/util/macros or,
   depending on you distribution, try package 'xutils-dev' or 'xorg-x11-util-macros'])])
+XORG_DEFAULT_OPTIONS
 
 AH_TOP([#include "xorg-server.h"])
 
