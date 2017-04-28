@@ -21,4 +21,8 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 ACLOCAL_AMFLAGS = -I m4
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = xorg-tslib.pc
+
 dist_xorgconf_DATA = 50-tslib.conf

@@ -103,5 +103,8 @@ AC_HEADER_STDC
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile])
+AC_CONFIG_FILES([Makefile
+		 src/Makefile
+		 man/Makefile
+		 xorg-tslib.pc])
 AC_OUTPUT

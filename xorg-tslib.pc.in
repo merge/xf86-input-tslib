@@ -1,0 +1,5 @@
+Name: xorg-tslib
+Description: X.Org tslib input driver.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir}
+Cflags: -I${includedir}
