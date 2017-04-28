@@ -102,9 +102,6 @@ AC_CHECK_LIB(ts, ts_open, [], [
 # Checks for header files.
 AC_HEADER_STDC
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-
 AC_CONFIG_FILES([Makefile
 		 src/Makefile
 		 man/Makefile
