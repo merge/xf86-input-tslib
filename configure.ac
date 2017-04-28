@@ -39,6 +39,9 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
 
+# Initialize libtool
+LT_INIT
+
 m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([you must install xorg-macros before running autoconf/autogen.
   Hint: either install from source, git://anongit.freedesktop.org/xorg/util/macros or,
