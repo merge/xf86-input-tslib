@@ -10,10 +10,11 @@
 [xorg-devel mailing list.](https://lists.freedesktop.org/mailman/listinfo/xorg)
 
 ### historical notes
-This [Github repository](https://github.com/merge/xf86-input-tslib)
-builds upon the former
-[source location at Pengutronix.](http://public.pengutronix.de/software/xf86-input-tslib/)
-(Thanks for hosting and all your development!)
-Development and main source distribution is now done on Github. It would be
-*awesome*, if Pengutronix would mirror future tarball releases, and thus
-provide backwards compatibility for downstream users.
+In cooperation with [Pengutronix](http://pengutronix.de/index_en.html), this
+[Github repository](https://github.com/merge/xf86-input-tslib) builds upon the
+former
+[source distribution.](http://public.pengutronix.de/software/xf86-input-tslib/)
+(Thanks Pengutronix, for hosting and all your awesome development work!)
+Development and main source distribution is now done on Github. In case
+Pengutronix continues mirroring future tarball releases, and thus provides
+backwards compatibility for downstream users: Thanks for your help :)
