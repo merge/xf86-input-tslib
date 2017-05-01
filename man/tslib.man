@@ -1,5 +1,5 @@
 .ds q \N'34'
-.TH TSLIB 4 "xf86-input-tslib 0.0.7" "X Version 11"
+.TH TSLIB __drivermansuffix__ __vendorversion__
 .SH NAME
 tslib \- tslib input driver
 .SH SYNOPSIS
