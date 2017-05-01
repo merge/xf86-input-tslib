@@ -64,3 +64,4 @@ src/.deps/
 stamp-h1
 man/tslib.4
 src/.libs/
+*.pc
