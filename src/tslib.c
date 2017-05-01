@@ -215,6 +215,7 @@ static void ReadInput (InputInfoPtr local)
 			x = samp.x;
 			y = samp.y;
 
+			/* TODO remove this? */
 			xf86XInputSetScreen(local, priv->screen_num,
 					samp.x,
 					samp.y);
