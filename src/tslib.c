@@ -614,7 +614,10 @@ _X_EXPORT InputDriverRec TSLIB = {
 	xf86TslibInit,		/* pre-init */
 	xf86TslibUninit,	/* un-init */
 	NULL,			/* module */
-	0			/* ref count */
+	NULL,			/* (ref count) new: default options */
+#ifdef XI86_DRV_CAP_SERVER_FD
+	0			/* TODO add this capability */
+#endif
 };
 
 /*
