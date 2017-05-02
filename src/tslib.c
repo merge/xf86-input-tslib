@@ -33,11 +33,6 @@
 #include "config.h"
 #endif
 
-#ifndef XFree86LOADER
-#include <unistd.h>
-#include <errno.h>
-#endif
-
 #include <misc.h>
 #include <xf86.h>
 #if !defined(DGUX)
@@ -50,16 +45,13 @@
 #include <mipointer.h>
 #include <randrstr.h>
 
-#include <tslib.h>
 #include <sys/time.h>
 #include <time.h>
 
+#include <tslib.h>
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <xserver-properties.h>
-#endif
-#ifdef XFree86LOADER
-#include <xf86Module.h>
 #endif
 
 #define MAXBUTTONS 3
@@ -624,7 +616,6 @@ _X_EXPORT InputDriverRec TSLIB = {
  *
  ***************************************************************************
  */
-#ifdef XFree86LOADER
 
 /*
  * xf86TslibUnplug --
@@ -669,5 +660,3 @@ _X_EXPORT XF86ModuleData tslibModuleData = {
 	xf86TslibPlug,
 	xf86TslibUnplug
 };
-
-#endif				/* XFree86LOADER */
