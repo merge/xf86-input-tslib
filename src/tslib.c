@@ -215,7 +215,9 @@ static void ReadInputLegacy(InputInfoPtr local)
 					priv->button_down_y = samp.y;
 					priv->button_down_x = samp.x;
 					priv->state = BUTTON_1_PRESSED;
-					//ErrorF("b1 down");
+				#ifdef DEBUG
+					xf86IDrvMsg(local, X_ERROR, "button 1 down\n");
+				#endif
 					xf86PostButtonEvent(local->dev, TRUE,
 						priv->state, TRUE, 0, 2,
 						priv->lastx,
@@ -224,17 +226,24 @@ static void ReadInputLegacy(InputInfoPtr local)
 				break;
 			case BUTTON_1_PRESSED:
 				if (samp.pressure) {
-					//ErrorF("%d %d ",pressureTime.tv_sec,pressureTime.tv_usec);
+				#ifdef DEBUG
+					xf86IDrvMsg(local, X_ERROR,
+						    "%d %d ",pressureTime.tv_sec,pressureTime.tv_usec);
+				#endif
 					if ((((double)pressureTime.tv_sec)+(((double)pressureTime.tv_usec)*1e-6) > TIME23RDBUTTON) &&
 					   (abs(priv->lastx-priv->button_down_x) < MOVEMENT23RDBUTTON &&
 					    abs(priv->lasty-priv->button_down_y) < MOVEMENT23RDBUTTON)) {
-						//ErrorF("b1 up");
+					#ifdef DEBUG
+						xf86IDrvMsg(local, X_ERROR, "button 1 up\n");
+					#endif
 						xf86PostButtonEvent(local->dev, TRUE,
 							priv->state, FALSE, 0, 2,
 							priv->lastx,
 							priv->lasty);
 						priv->state = BUTTON_3_CLICK;
-						//ErrorF("b3 down");
+					#ifdef DEBUG
+						xf86IDrvMsg(local, X_ERROR, "button 3 down\n");
+					#endif
 						xf86PostButtonEvent(local->dev, TRUE,
 							priv->state, TRUE, 0, 2,
 							priv->lastx,
@@ -245,10 +254,14 @@ static void ReadInputLegacy(InputInfoPtr local)
 						priv->button_down_start = now;
 						priv->button_down_y = samp.y;
 						priv->button_down_x = samp.x;
-						//ErrorF("b1 state reset");
+					#ifdef DEBUG
+						xf86IDrvMsg(local, X_ERROR, "button 1 state reset\n");
+					#endif
 					}
 				} else {
-					//ErrorF("b1 up");
+				#ifdef DEBUG
+					xf86IDrvMsg(local, X_ERROR, "button 1 up\n");
+				#endif
 					xf86PostButtonEvent(local->dev, TRUE,
 						priv->state, FALSE, 0, 2,
 						priv->lastx,
@@ -257,7 +270,9 @@ static void ReadInputLegacy(InputInfoPtr local)
 				}
 				break;
 			case BUTTON_3_CLICK:
-				//ErrorF("b3 up");
+			#ifdef DEBUG
+				xf86IDrvMsg(local, X_ERROR, "button 3 up\n");
+			#endif
 				xf86PostButtonEvent(local->dev, TRUE,
 					priv->state, FALSE, 0, 2,
 					priv->lastx,
@@ -266,7 +281,9 @@ static void ReadInputLegacy(InputInfoPtr local)
 				break;
 			case BUTTON_3_CLICKED:
 				if (!samp.pressure) {
-					//ErrorF("b3 free");
+				#ifdef DEBUG
+					xf86IDrvMsg(local, X_ERROR, "button 3 free\n");
+				#endif
 					priv->state = BUTTON_NOT_PRESSED;
 				}
 				break;
@@ -274,7 +291,7 @@ static void ReadInputLegacy(InputInfoPtr local)
 	}
 
 	if (ret < 0) {
-		ErrorF("ts_read failed\n");
+		xf86IDrvMsg(local, X_ERROR, "ts_read failed\n");
 		return;
 	}
 }
@@ -341,7 +358,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 	struct ts_priv *priv;
 
 #ifdef DEBUG
-	ErrorF("%s\n", __FUNCTION__);
+	xf86IDrvMsg(pInfo, X_ERROR, "%s\n", __FUNCTION__);
 #endif
 	pInfo = device->public.devicePrivate;
 	priv = pInfo->private;
@@ -358,7 +375,8 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		if (InitButtonClassDeviceStruct(device, MAXBUTTONS,
 						labels,
 						map) == FALSE) {
-			ErrorF("unable to allocate Button class device\n");
+			xf86IDrvMsg(pInfo, X_ERROR,
+				    "unable to allocate Button class device\n");
 			return !Success;
 		}
 
@@ -366,7 +384,8 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 						  2,
 						  labels,
 						  0, Absolute) == FALSE) {
-			ErrorF("unable to allocate Valuator class device\n");
+			xf86IDrvMsg(pInfo, X_ERROR,
+				    "unable to allocate Valuator class device\n");
 			return !Success;
 		}
 
@@ -407,7 +426,8 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 					       );
 
 		if (InitProximityClassDeviceStruct(device) == FALSE) {
-			ErrorF("Unable to allocate EVTouch touchscreen ProximityClassDeviceStruct\n");
+			xf86IDrvMsg(pInfo, X_ERROR,
+				    "Unable to allocate EVTouch touchscreen ProximityClassDeviceStruct\n");
 			return !Success;
 		}
 
@@ -446,7 +466,7 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	struct ts_priv *priv = (struct ts_priv *)(pInfo->private);
 #ifdef DEBUG
-	ErrorF("%s\n", __FUNCTION__);
+	xf86IDrvMsg(pInfo, X_ERROR, "%s\n", __FUNCTION__);
 #endif
 
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
@@ -551,13 +571,13 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	free(s);
 
 	if (!priv->ts) {
-		ErrorF("ts_open failed (device=%s)\n", s);
+		xf86IDrvMsg(pInfo, X_ERROR, "ts_open failed (device=%s)\n", s);
 		xf86DeleteInput(pInfo, 0);
 		return BadValue;
 	}
 
 	if (ts_config(priv->ts)) {
-		ErrorF("ts_config failed\n");
+		xf86IDrvMsg(pInfo, X_ERROR, "ts_config failed\n");
 		xf86DeleteInput(pInfo, 0);
 		return BadValue;
 	}
