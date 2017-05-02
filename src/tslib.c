@@ -372,9 +372,6 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 						labels,
 #endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-						  xf86GetMotionEvents,
-#endif
 						  0, Absolute) == FALSE) {
 			ErrorF("unable to allocate Valuator class device\n");
 			return !Success;
@@ -424,11 +421,6 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 			ErrorF("Unable to allocate EVTouch touchscreen ProximityClassDeviceStruct\n");
 			return !Success;
 		}
-
-		/* allocate the motion history buffer if needed */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-		xf86MotionHistoryAllocate(pInfo);
-#endif
 
 		if (!InitPtrFeedbackClassDeviceStruct(device, PointerControlProc))
 			return !Success;
@@ -505,10 +497,6 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->flags =
 	    XI86_KEYBOARD_CAPABLE | XI86_POINTER_CAPABLE |
 	    XI86_SEND_DRAG_EVENTS;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-	pInfo->motion_history_proc = xf86GetMotionEvents;
-	pInfo->history_size = 0;
-#endif
 	pInfo->conf_idev = dev;
 	pInfo->close_proc = NULL;
 	pInfo->conversion_proc = ConvertProc;
