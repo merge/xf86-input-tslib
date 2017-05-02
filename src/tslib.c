@@ -44,15 +44,13 @@
 #include <X11/keysym.h>
 #include <mipointer.h>
 #include <randrstr.h>
+#include <xserver-properties.h>
 
 #include <sys/time.h>
 #include <time.h>
 
 #include <tslib.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-#include <xserver-properties.h>
-#endif
 
 #define MAXBUTTONS 3
 #define TIME23RDBUTTON 0.5
@@ -323,7 +321,6 @@ static void ReadInput(InputInfoPtr local)
 #endif
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 static void xf86TslibInitButtonLabels(Atom *labels, int nlabels)
 {
 	memset(labels, 0, nlabels * sizeof(Atom));
@@ -346,7 +343,6 @@ static void xf86TslibInitButtonLabels(Atom *labels, int nlabels)
 			break;
 	}
 }
-#endif
 
 /*
  * xf86TslibControlProc --
@@ -358,9 +354,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 {
 	InputInfoPtr pInfo;
 	unsigned char map[MAXBUTTONS + 1];
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	Atom labels[MAXBUTTONS];
-#endif
 	int i, axiswidth, axisheight;
 	struct ts_priv *priv;
 
@@ -377,14 +371,10 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		for (i = 0; i < MAXBUTTONS; i++) {
 			map[i + 1] = i + 1;
 		}
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 		xf86TslibInitButtonLabels(labels, MAXBUTTONS);
-#endif
 
 		if (InitButtonClassDeviceStruct(device, MAXBUTTONS,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 						labels,
-#endif
 						map) == FALSE) {
 			ErrorF("unable to allocate Button class device\n");
 			return !Success;
@@ -392,9 +382,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 
 		if (InitValuatorClassDeviceStruct(device,
 						  2,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-						labels,
-#endif
+						  labels,
 						  0, Absolute) == FALSE) {
 			ErrorF("unable to allocate Valuator class device\n");
 			return !Success;
@@ -413,9 +401,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		}
 
 		InitValuatorAxisStruct(device, 0,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
-#endif
 					       0,		/* min val */
 					       axiswidth - 1,	/* max val */
 					       axiswidth,	/* resolution */
@@ -427,9 +413,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 					       );
 
 		InitValuatorAxisStruct(device, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
-#endif
 					       0,		/* min val */
 					       axisheight - 1,	/* max val */
 					       axisheight,	/* resolution */
