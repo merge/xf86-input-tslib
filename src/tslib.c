@@ -98,24 +98,6 @@ struct ts_priv {
 };
 
 static void
-BellProc(int percent, DeviceIntPtr pDev, pointer ctrl, int unused)
-{
-#ifdef DEBUG
-	ErrorF("%s\n", __FUNCTION__);
-#endif
-	return;
-}
-
-static void
-KeyControlProc(DeviceIntPtr pDev, KeybdCtrl *ctrl)
-{
-#ifdef DEBUG
-	ErrorF("%s\n", __FUNCTION__);
-#endif
-	return;
-}
-
-static void
 PointerControlProc(DeviceIntPtr dev, PtrCtrl *ctrl)
 {
 }
