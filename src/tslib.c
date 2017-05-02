@@ -437,6 +437,10 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 
 	case DEVICE_OFF:
 	case DEVICE_CLOSE:
+#if HAVE_THREADED_INPUT
+		if (pInfo->fd != -1)
+			xf86RemoveEnabledDevice(pInfo);
+#endif
 		device->public.on = FALSE;
 		break;
 	}
