@@ -674,11 +674,3 @@ _X_EXPORT XF86ModuleData tslibModuleData = {
 };
 
 #endif				/* XFree86LOADER */
-
-/*
- * Local variables:
- * change-log-default-name: "~/xinput.log"
- * c-file-style: "bsd"
- * End:
- */
-/* end of tslib.c */
