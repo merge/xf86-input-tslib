@@ -152,7 +152,7 @@ static struct timeval TimevalDiff(struct timeval a, struct timeval b)
     return t;
 }
 
-static void ReadInput (InputInfoPtr local)
+static void ReadInputLegacy(InputInfoPtr local)
 {
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
 	struct ts_sample samp;
@@ -297,7 +297,30 @@ static void ReadInput (InputInfoPtr local)
 		ErrorF("ts_read failed\n");
 		return;
 	}
+}
 
+#ifdef TSLIB_VERSION_MT
+static void ReadInputMT(InputInfoPtr local)
+{
+	/* TODO
+	 * buffers
+	 * ts_read_mt()
+	 * xf86PostTouchEvent() per slot / sample
+	 *
+	 * only if ENOSYS -> ReadInputLegacy()
+	 */
+
+	ReadInputLegacy(local);
+}
+#endif /* TSLIB_VERSION_MT */
+
+static void ReadInput(InputInfoPtr local)
+{
+#ifdef TSLIB_VERSION_MT
+	ReadInputMT(local);
+#else
+	ReadInputLegacy(local);
+#endif
 }
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
