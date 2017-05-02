@@ -66,9 +66,6 @@
 #define TIME23RDBUTTON 0.5
 #define MOVEMENT23RDBUTTON 4
 
-#define DEFAULT_HEIGHT		240
-#define DEFAULT_WIDTH		320
-
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 #define COLLECT_INPUT_OPTIONS(pInfo, options) xf86CollectInputOptions((pInfo), (options), NULL)
 #else
