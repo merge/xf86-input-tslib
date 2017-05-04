@@ -111,6 +111,10 @@ sha256sum xf86-input-tslib-${version}.tar.xz > xf86-input-tslib-${version}.tar.x
 sha256sum xf86-input-tslib-${version}.tar.gz > xf86-input-tslib-${version}.tar.gz.sha256
 sha256sum xf86-input-tslib-${version}.tar.bz2 > xf86-input-tslib-${version}.tar.bz2.sha256
 
+sha512sum xf86-input-tslib-${version}.tar.xz > xf86-input-tslib-${version}.tar.xz.sha512
+sha512sum xf86-input-tslib-${version}.tar.gz > xf86-input-tslib-${version}.tar.gz.sha512
+sha512sum xf86-input-tslib-${version}.tar.bz2 > xf86-input-tslib-${version}.tar.bz2.sha512
+
 gpg -b -a xf86-input-tslib-${version}.tar.xz
 gpg -b -a xf86-input-tslib-${version}.tar.gz
 gpg -b -a xf86-input-tslib-${version}.tar.bz2
