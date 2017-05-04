@@ -56,13 +56,8 @@
 #define TIME23RDBUTTON 0.5
 #define MOVEMENT23RDBUTTON 4
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-#define COLLECT_INPUT_OPTIONS(pInfo, options) xf86CollectInputOptions((pInfo), (options), NULL)
-#else
 #define COLLECT_INPUT_OPTIONS(pInfo, options) xf86CollectInputOptions((pInfo), (options))
-#endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 13
 static void
 xf86XInputSetScreen(InputInfoPtr	pInfo,
 		    int			screen_number,
@@ -74,7 +69,6 @@ xf86XInputSetScreen(InputInfoPtr	pInfo,
 		miPointerSetScreen(pInfo->dev, screen_number, x, y);
 	}
 }
-#endif
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
 #define HAVE_THREADED_INPUT	1
@@ -408,9 +402,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 					       axiswidth,	/* resolution */
 					       0,		/* min_res */
 					       axiswidth	/* max_res */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 					       , Absolute
-#endif
 					       );
 
 		InitValuatorAxisStruct(device, 1,
@@ -420,9 +412,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 					       axisheight,	/* resolution */
 					       0,		/* min_res */
 					       axisheight	/* max_res */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 					       , Absolute
-#endif
 					       );
 
 		if (InitProximityClassDeviceStruct(device) == FALSE) {
@@ -481,42 +471,15 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
  *
  * called when the module subsection is found in XF86Config
  */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 static int
 xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
-#else
-static InputInfoPtr
-xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
-#endif
 {
 	struct ts_priv *priv;
 	char *s;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	InputInfoPtr pInfo;
-#endif
 
 	priv = calloc(1, sizeof (struct ts_priv));
 	if (!priv)
 		return BadValue;
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	if (!(pInfo = xf86AllocateInput(drv, 0))) {
-		free(priv);
-		return BadValue;
-	}
-
-	/* Initialise the InputInfoRec. */
-	pInfo->name = dev->identifier;
-	pInfo->flags =
-	    XI86_KEYBOARD_CAPABLE | XI86_POINTER_CAPABLE |
-	    XI86_SEND_DRAG_EVENTS;
-	pInfo->conf_idev = dev;
-	pInfo->close_proc = NULL;
-	pInfo->conversion_proc = ConvertProc;
-	pInfo->reverse_conversion_proc = NULL;
-	pInfo->private_flags = 0;
-	pInfo->always_core_feedback = 0;
-#endif
 
 	pInfo->type_name = XI_TOUCHSCREEN;
 	pInfo->control_proc = NULL;
@@ -555,17 +518,9 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		priv->rotate = TSLIB_ROTATE_NONE;
 	}
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	s = xf86CheckStrOption(dev->commonOptions, "path", NULL);
-#else
 	s = xf86CheckStrOption(pInfo->options, "path", NULL);
-#endif
 	if (!s)
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-		s = xf86CheckStrOption(dev->commonOptions, "Device", NULL);
-#else
 		s = xf86CheckStrOption(pInfo->options, "Device", NULL);
-#endif
 
 	priv->ts = ts_open(s, 1);
 	free(s);
@@ -587,11 +542,6 @@ xf86TslibInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->state = BUTTON_NOT_PRESSED;
 	if (xf86SetIntOption(pInfo->options, "EmulateRightButton", 0) == 0)
 		priv->state = BUTTON_EMULATION_OFF;
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	/* Mark the device configured */
-	pInfo->flags |= XI86_CONFIGURED;
-#endif
 
 	/* Return the configured device */
 	return Success;
