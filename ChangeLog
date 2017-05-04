@@ -4,6 +4,8 @@
 
 	* printing in consistent X.org standard logging format
 
+	* fixed all containing version information to be consistent
+
 2017-04-28  Martin Kepplinger <martink@posteo.de>
 
 	xf86-input-tslib 0.0.7 includes the following changes:
