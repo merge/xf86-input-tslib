@@ -361,13 +361,27 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	if (!s)
 		s = xf86SetStrOption(pInfo->options, "Device", NULL);
 
+#ifdef TSLIB_VERSION_MT
 	priv->ts = ts_setup(s, 1);
-
 	if (!priv->ts) {
 		xf86IDrvMsg(pInfo, X_ERROR, "ts_setup failed (device=%s)\n", s);
 		xf86DeleteInput(pInfo, 0);
 		return BadValue;
 	}
+#else
+	priv->ts = ts_open(s, 1);
+	if (!priv->ts) {
+		xf86IDrvMsg(pInfo, X_ERROR, "ts_open failed (device=%s)\n", s);
+		xf86DeleteInput(pInfo, 0);
+		return BadValue;
+	}
+
+	if (ts_config(priv->ts)) {
+		xf86IDrvMsg(pInfo, X_ERROR, "ts_config failed\n");
+		xf86DeleteInput(pInfo, 0);
+		return BadValue;
+	}
+#endif
 
 	pInfo->fd = ts_fd(priv->ts);
 
