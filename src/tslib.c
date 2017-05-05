@@ -48,6 +48,7 @@
 
 #include <sys/time.h>
 #include <time.h>
+#include <linux/input.h>
 
 #include <tslib.h>
 /* test old legacy interface with tslib 1.10+
@@ -65,31 +66,15 @@
 #define TIME23RDBUTTON 0.5
 #define MOVEMENT23RDBUTTON 4
 
-static void
-xf86XInputSetScreen(InputInfoPtr	pInfo,
-		    int			screen_number,
-		    int			x,
-		    int			y)
-{
-	if (miPointerGetScreen(pInfo->dev) !=
-	    screenInfo.screens[screen_number]) {
-		miPointerSetScreen(pInfo->dev, screen_number, x, y);
-	}
-}
-
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
 #define HAVE_THREADED_INPUT	1
 #endif
-
-enum { TSLIB_ROTATE_NONE = 0, TSLIB_ROTATE_CW = 270, TSLIB_ROTATE_UD = 180, TSLIB_ROTATE_CCW = 90 };
 
 enum button_state { BUTTON_NOT_PRESSED = 0, BUTTON_1_PRESSED = 1, BUTTON_3_CLICK = 3, BUTTON_3_CLICKED = 4, BUTTON_EMULATION_OFF = -1 };
 
 struct ts_priv {
 	struct tsdev *ts;
 	int lastx, lasty, lastp;
-	int screen_num;
-	int rotate;
 	int height;
 	int width;
 	enum button_state state;
@@ -143,9 +128,6 @@ static void ReadInputLegacy(InputInfoPtr local)
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
 	struct ts_sample samp;
 	int ret;
-	int x, y;
-	ScrnInfoPtr pScrn = xf86Screens[priv->screen_num];
-	Rotation rotation = rrGetScrPriv (pScrn->pScreen) ? RRGetRotation(pScrn->pScreen) : RR_Rotate_0;
 	struct timeval now;
 
 	while ((ret = ts_read(priv->ts, &samp, 1)) == 1) {
@@ -153,49 +135,11 @@ static void ReadInputLegacy(InputInfoPtr local)
 		struct timeval pressureTime = TimevalDiff(now, priv->button_down_start);
 
 		if (samp.pressure) {
-			int tmp_x = samp.x;
-
-			switch (priv->rotate) {
-			case TSLIB_ROTATE_CW:	samp.x = samp.y;
-						samp.y = priv->width - tmp_x;
-						break;
-			case TSLIB_ROTATE_UD:	samp.x = priv->width - samp.x;
-						samp.y = priv->height - samp.y;
-						break;
-			case TSLIB_ROTATE_CCW:	samp.x = priv->height - samp.y;
-						samp.y = tmp_x;
-						break;
-			default:		break;
-			}
-
-			tmp_x = samp.x;
-
-			switch (rotation) {
-			case RR_Rotate_90:
-				samp.x = (priv->height - samp.y - 1) * priv->width / priv->height;
-				samp.y = tmp_x * priv->height / priv->width;
-				break;
-			case RR_Rotate_180:
-				samp.x = priv->width - samp.x - 1;
-				samp.y = priv->height - samp.y - 1;
-				break;
-			case RR_Rotate_270:
-				samp.x = samp.y * priv->width / priv->height;
-				samp.y = (priv->width - tmp_x - 1) * priv->height / priv->width;
-				break;
-			}
-
 			priv->lastx = samp.x;
 			priv->lasty = samp.y;
-			x = samp.x;
-			y = samp.y;
-
-			xf86XInputSetScreen(local, priv->screen_num,
-					samp.x,
-					samp.y);
 
 			xf86PostMotionEvent (local->dev, TRUE, 0, 2,
-					x, y);
+					samp.x, samp.y);
 
 		}
 
@@ -437,17 +381,8 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 			return !Success;
 		}
 
-		switch (priv->rotate) {
-		case TSLIB_ROTATE_CW:
-		case TSLIB_ROTATE_CCW:
-			axiswidth = priv->height;
-			axisheight = priv->width;
-			break;
-		default:
-			axiswidth = priv->width;
-			axisheight = priv->height;
-			break;
-		}
+		axiswidth = priv->width;
+		axisheight = priv->height;
 
 		InitValuatorAxisStruct(device, 0,
 				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
@@ -540,6 +475,7 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	struct ts_priv *priv;
 	char *s;
 	int i;
+	struct input_absinfo abs;
 
 	priv = calloc(1, sizeof (struct ts_priv));
 	if (!priv)
@@ -554,8 +490,6 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	pInfo->dev = NULL;
 
 /* TODO use ioctl and get them */
-	priv->screen_num = xf86SetIntOption(pInfo->options, "ScreenNumber", 0);
-
 	priv->width = xf86SetIntOption(pInfo->options, "Width", 0);
 	if (priv->width <= 0)
 		priv->width = screenInfo.screens[0]->width;
@@ -568,21 +502,6 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 /* TODO check have_abs_mt_pos */
 
 /*****************************************/
-
-	s = xf86SetStrOption(pInfo->options, "Rotate", NULL);
-	if (s) {
-		if (strcmp(s, "CW") == 0) {
-			priv->rotate = TSLIB_ROTATE_CW;
-		} else if (strcmp(s, "UD") == 0) {
-			priv->rotate = TSLIB_ROTATE_UD;
-		} else if (strcmp(s, "CCW") == 0) {
-			priv->rotate = TSLIB_ROTATE_CCW;
-		} else {
-			priv->rotate = TSLIB_ROTATE_NONE;
-		}
-	} else {
-		priv->rotate = TSLIB_ROTATE_NONE;
-	}
 
 	s = xf86CheckStrOption(pInfo->options, "path", NULL);
 	if (!s)
