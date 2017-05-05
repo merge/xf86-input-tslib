@@ -398,7 +398,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 #if HAVE_THREADED_INPUT
 		xf86RemoveEnabledDevice(pInfo);
 #else
-		RemoveEnabledDevice(pInfo);
+		RemoveEnabledDevice(pInfo->fd);
 #endif
 		device->public.on = FALSE;
 		break;
