@@ -88,29 +88,6 @@ struct ts_priv {
 #endif
 };
 
-static void
-PointerControlProc(DeviceIntPtr dev, PtrCtrl *ctrl)
-{
-}
-
-static Bool
-ConvertProc(InputInfoPtr local,
-			 int first,
-			 int num,
-			 int v0,
-			 int v1,
-			 int v2,
-			 int v3,
-			 int v4,
-			 int v5,
-			 int *x,
-			 int *y)
-{
-	*x = v0;
-	*y = v1;
-	return TRUE;
-}
-
 static struct timeval TimevalDiff(struct timeval a, struct timeval b)
 {
 	struct timeval t;
@@ -312,36 +289,25 @@ static void ReadInput(InputInfoPtr local)
 #endif
 }
 
-static void xf86TslibInitButtonLabels(Atom *labels, int nlabels)
+static void init_button_labels(Atom *labels, size_t size)
 {
-	memset(labels, 0, nlabels * sizeof(Atom));
-	switch (nlabels) {
-		default:
-		case 7:
-			labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
-		case 6:
-			labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
-		case 5:
-			labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
-		case 4:
-			labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
-		case 3:
-			labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
-		case 2:
-			labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
-		case 1:
-			labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
-			break;
-	}
+        assert(size > 10);
+
+        memset(labels, 0, size * sizeof(Atom));
+        labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
+        labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
+        labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
+        labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
+        labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
+        labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
+        labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
+        labels[7] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_SIDE);
+        labels[8] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_EXTRA);
+        labels[9] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_FORWARD);
+        labels[10] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_BACK);
 }
 
-/*
- * xf86TslibControlProc --
- *
- * called to change the state of a device.
- */
-static int
-xf86TslibControlProc(DeviceIntPtr device, int what)
+static int xf86TslibControlProc(DeviceIntPtr device, int what)
 {
 	InputInfoPtr pInfo;
 	unsigned char map[MAX_BUTTONS + 1];
@@ -359,12 +325,14 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 	case DEVICE_INIT:
 		device->public.on = FALSE;
 
-		for (i = 0; i < MAX_BUTTONS; i++) {
+		memset(map, 0, sizeof(map));
+		for (i = 0; i < MAX_BUTTONS; i++)
 			map[i + 1] = i + 1;
-		}
-		xf86TslibInitButtonLabels(labels, MAX_BUTTONS);
 
-		if (InitButtonClassDeviceStruct(device, MAX_BUTTONS,
+		init_button_labels(labels, ARRAY_SIZE(labels));
+
+		if (InitButtonClassDeviceStruct(device,
+						MAX_BUTTONS,
 						labels,
 						map) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
@@ -384,8 +352,13 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		axiswidth = priv->width;
 		axisheight = priv->height;
 
+		/* TODO
+		one unified touch init that both read function can work with.
+		at first ABS_MT_POS X/Y only!
+		later ABS_X handling like evdev does
+		*/
 		InitValuatorAxisStruct(device, 0,
-				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
+				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
 				       0,		/* min val */
 				       axiswidth - 1,	/* max val */
 				       axiswidth,	/* resolution */
@@ -394,7 +367,7 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 				       Absolute);
 
 		InitValuatorAxisStruct(device, 1,
-				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
+				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
 				       0,		/* min val */
 				       axisheight - 1,	/* max val */
 				       axisheight,	/* resolution */
@@ -402,15 +375,14 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 				       axisheight,	/* max_res */
 				       Absolute);
 
-		if (InitProximityClassDeviceStruct(device) == FALSE) {
+		if (InitTouchClassDeviceStruct(device,
+					       TOUCH_MAX_SLOTS,
+					       XIDirectTouch,
+					       2 /* axes */) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
-				    "Unable to allocate EVTouch touchscreen ProximityClassDeviceStruct\n");
+				    "Unable to allocate TouchClassDeviceStruct\n");
 			return !Success;
 		}
-
-		if (!InitPtrFeedbackClassDeviceStruct(device, PointerControlProc))
-			return !Success;
-		break;
 
 	case DEVICE_ON:
 #if HAVE_THREADED_INPUT
@@ -424,8 +396,9 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 	case DEVICE_OFF:
 	case DEVICE_CLOSE:
 #if HAVE_THREADED_INPUT
-		if (pInfo->fd != -1)
-			xf86RemoveEnabledDevice(pInfo);
+		xf86RemoveEnabledDevice(pInfo);
+#else
+		RemoveEnabledDevice(pInfo);
 #endif
 		device->public.on = FALSE;
 		break;
@@ -464,13 +437,7 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	xf86DeleteInput(pInfo, 0);
 }
 
-/*
- * xf86TslibInit --
- *
- * called when the module subsection is found in XF86Config
- */
-static int
-xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	struct ts_priv *priv;
 	char *s;
@@ -497,11 +464,7 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	priv->height = xf86SetIntOption(pInfo->options, "Height", 0);
 	if (priv->height <= 0)
 		priv->height = screenInfo.screens[0]->height;
-
-
-/* TODO check have_abs_mt_pos */
-
-/*****************************************/
+/********************************/
 
 	s = xf86CheckStrOption(pInfo->options, "path", NULL);
 	if (!s)
