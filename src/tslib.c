@@ -592,13 +592,12 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 }
 
 _X_EXPORT InputDriverRec TSLIB = {
-	1,			/* driver version */
-	"tslib",		/* driver name */
-	NULL,			/* identify */
-	xf86TslibInit,		/* pre-init */
-	xf86TslibUninit,	/* un-init */
-	NULL,			/* module */
-	NULL,			/* (ref count) new: default options */
+	.driverVersion	= 1,
+	.driverName	= "tslib",
+	.PreInit	= xf86TslibInit,
+	.UnInit		= xf86TslibUninit,
+	.module		= NULL,
+	.default_options= NULL,
 #ifdef XI86_DRV_CAP_SERVER_FD
 	0			/* TODO add this capability */
 #endif
