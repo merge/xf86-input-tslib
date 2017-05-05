@@ -457,21 +457,17 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	pInfo->dev = NULL;
 
 /* TODO use ioctl and get them */
-	priv->width = xf86SetIntOption(pInfo->options, "Width", 0);
-	if (priv->width <= 0)
-		priv->width = screenInfo.screens[0]->width;
+	priv->width = xf86SetIntOption(pInfo->options, "Width", 1280);
 
-	priv->height = xf86SetIntOption(pInfo->options, "Height", 0);
-	if (priv->height <= 0)
-		priv->height = screenInfo.screens[0]->height;
+	priv->height = xf86SetIntOption(pInfo->options, "Height", 800);
 /********************************/
 
-	s = xf86CheckStrOption(pInfo->options, "path", NULL);
+	s = xf86SetStrOption(pInfo->options, "path", NULL);
 	if (!s)
-		s = xf86CheckStrOption(pInfo->options, "Device", NULL);
+		s = xf86SetStrOption(pInfo->options, "Device", NULL);
 
 	priv->ts = ts_setup(s, 1);
-	free(s);
+//	free(s);
 
 	if (!priv->ts) {
 		xf86IDrvMsg(pInfo, X_ERROR, "ts_setup failed (device=%s)\n", s);
@@ -484,6 +480,10 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	priv->state = BUTTON_NOT_PRESSED;
 	if (xf86SetIntOption(pInfo->options, "EmulateRightButton", 0) == 0)
 		priv->state = BUTTON_EMULATION_OFF;
+
+	/* process generic options */
+	xf86CollectInputOptions(pInfo, NULL);
+	xf86ProcessCommonOptions(pInfo, pInfo->options);
 
 #ifdef TSLIB_VERSION_MT
 	priv->samp_mt = malloc(TOUCH_SAMPLES_READ * sizeof(struct ts_sample_mt *));
