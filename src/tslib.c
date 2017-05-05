@@ -85,7 +85,6 @@ enum { TSLIB_ROTATE_NONE = 0, TSLIB_ROTATE_CW = 270, TSLIB_ROTATE_UD = 180, TSLI
 enum button_state { BUTTON_NOT_PRESSED = 0, BUTTON_1_PRESSED = 1, BUTTON_3_CLICK = 3, BUTTON_3_CLICKED = 4, BUTTON_EMULATION_OFF = -1 };
 
 struct ts_priv {
-	XISBuffer *buffer;
 	struct tsdev *ts;
 	int lastx, lasty, lastp;
 	int screen_num;
