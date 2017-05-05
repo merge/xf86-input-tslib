@@ -48,7 +48,12 @@
 
 #include <sys/time.h>
 #include <time.h>
+
+#if defined (__FreeBSD__)
+#include <dev/evdev/input.h>
+#else
 #include <linux/input.h>
+#endif
 
 #include <tslib.h>
 /* test old legacy interface with tslib 1.10+
