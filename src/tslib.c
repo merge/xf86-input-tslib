@@ -65,8 +65,6 @@
 #define TIME23RDBUTTON 0.5
 #define MOVEMENT23RDBUTTON 4
 
-#define COLLECT_INPUT_OPTIONS(pInfo, options) xf86CollectInputOptions((pInfo), (options))
-
 static void
 xf86XInputSetScreen(InputInfoPtr	pInfo,
 		    int			screen_number,
@@ -192,7 +190,6 @@ static void ReadInputLegacy(InputInfoPtr local)
 			x = samp.x;
 			y = samp.y;
 
-			/* TODO remove this? */
 			xf86XInputSetScreen(local, priv->screen_num,
 					samp.x,
 					samp.y);
@@ -513,10 +510,7 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	pInfo->private = priv;
 	pInfo->dev = NULL;
 
-	/* Collect the options, and process the common options. */
-	COLLECT_INPUT_OPTIONS(pInfo, NULL);
-	xf86ProcessCommonOptions(pInfo, pInfo->options);
-
+/* TODO use libevdev and get them */
 	priv->screen_num = xf86SetIntOption(pInfo->options, "ScreenNumber", 0);
 
 	priv->width = xf86SetIntOption(pInfo->options, "Width", 0);
