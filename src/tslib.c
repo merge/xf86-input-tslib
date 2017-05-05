@@ -338,6 +338,9 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	char *s;
 	int i;
 	struct input_absinfo abs;
+#ifdef TSLIB_VERSION_MT
+	struct ts_lib_version_data *ver = ts_libversion();
+#endif
 
 	priv = calloc(1, sizeof (struct ts_priv));
 	if (!priv)
@@ -368,6 +371,8 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		xf86DeleteInput(pInfo, 0);
 		return BadValue;
 	}
+
+	xf86IDrvMsg(pInfo, X_INFO, "using libts version %X\n", ver->version_num);
 #else
 	priv->ts = ts_open(s, 1);
 	if (!priv->ts) {
