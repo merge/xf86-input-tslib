@@ -396,24 +396,22 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 		}
 
 		InitValuatorAxisStruct(device, 0,
-					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
-					       0,		/* min val */
-					       axiswidth - 1,	/* max val */
-					       axiswidth,	/* resolution */
-					       0,		/* min_res */
-					       axiswidth	/* max_res */
-					       , Absolute
-					       );
+				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
+				       0,		/* min val */
+				       axiswidth - 1,	/* max val */
+				       axiswidth,	/* resolution */
+				       0,		/* min_res */
+				       axiswidth,	/* max_res */
+				       Absolute);
 
 		InitValuatorAxisStruct(device, 1,
-					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
-					       0,		/* min val */
-					       axisheight - 1,	/* max val */
-					       axisheight,	/* resolution */
-					       0,		/* min_res */
-					       axisheight	/* max_res */
-					       , Absolute
-					       );
+				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
+				       0,		/* min val */
+				       axisheight - 1,	/* max val */
+				       axisheight,	/* resolution */
+				       0,		/* min_res */
+				       axisheight,	/* max_res */
+				       Absolute);
 
 		if (InitProximityClassDeviceStruct(device) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
