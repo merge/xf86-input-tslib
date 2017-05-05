@@ -25,6 +25,6 @@ ACLOCAL_AMFLAGS = -I m4
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xorg-tslib.pc
 
-dist_xorgconf_DATA = 50-tslib.conf
+dist_xorgconf_DATA = 60-tslib.conf
 
 EXTRA_DIST = README.md
