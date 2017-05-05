@@ -302,17 +302,60 @@ static void ReadInputLegacy(InputInfoPtr local)
 }
 
 #ifdef TSLIB_VERSION_MT
+static void ReadHandleMTSample(InputInfoPtr local, int nr, int slot)
+{
+	struct ts_priv *priv = (struct ts_priv *) (local->private);
+	int type;
+	static unsigned int next_touchid;
+	static unsigned int touchids[TOUCH_MAX_SLOTS] = {0};
+	ValuatorMask *m = priv->valuators;
+
+	if (priv->last_mt[slot].pressure == 0 && priv->samp_mt[nr][slot].pressure > 0) {
+		type = XI_TouchBegin;
+		touchids[slot] = next_touchid++;
+	} else if (priv->last_mt[slot].pressure > 0 && priv->samp_mt[nr][slot].pressure == 0) {
+		type = XI_TouchEnd;
+	} else if (priv->last_mt[slot].pressure > 0 && priv->samp_mt[nr][slot].pressure > 0) {
+		type = XI_TouchUpdate;
+	}
+
+	valuator_mask_zero(m);
+
+	if (type != XI_TouchEnd) {
+		valuator_mask_set_double(m, 0, priv->samp_mt[nr][slot].x);
+		valuator_mask_set_double(m, 1, priv->samp_mt[nr][slot].y);
+	}
+
+	xf86PostTouchEvent(local->dev, touchids[slot], type, 0, m);
+}
+
 static void ReadInputMT(InputInfoPtr local)
 {
-	/* TODO
-	 * buffers
-	 * ts_read_mt()
-	 * xf86PostTouchEvent() per slot / sample
-	 *
-	 * only if ENOSYS -> ReadInputLegacy()
-	 */
+	struct ts_priv *priv = (struct ts_priv *) (local->private);
+	int ret;
+	int i, j;
 
-	ReadInputLegacy(local);
+	while (1) {
+		ret = ts_read_mt(priv->ts, priv->samp_mt,
+				 TOUCH_MAX_SLOTS, TOUCH_SAMPLES_READ);
+		if (ret == -ENOSYS) /* tslib module_raw without MT support */
+			ReadInputLegacy(local);
+		else if (ret <= 0)
+			return;
+
+		for (i = 0; i < ret; i++) {
+			for (j = 0; j < TOUCH_MAX_SLOTS; j++) {
+				if (priv->samp_mt[i][j].valid != 1)
+					continue;
+
+				ReadHandleMTSample(local, i, j);
+
+				memcpy(&priv->last_mt[j],
+				       &priv->samp_mt[i][j],
+				       sizeof(struct ts_sample_mt));
+			}
+		}
+	}
 }
 #endif /* TSLIB_VERSION_MT */
 
@@ -510,7 +553,7 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	pInfo->private = priv;
 	pInfo->dev = NULL;
 
-/* TODO use libevdev and get them */
+/* TODO use ioctl and get them */
 	priv->screen_num = xf86SetIntOption(pInfo->options, "ScreenNumber", 0);
 
 	priv->width = xf86SetIntOption(pInfo->options, "Width", 0);
@@ -520,6 +563,11 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	priv->height = xf86SetIntOption(pInfo->options, "Height", 0);
 	if (priv->height <= 0)
 		priv->height = screenInfo.screens[0]->height;
+
+
+/* TODO check have_abs_mt_pos */
+
+/*****************************************/
 
 	s = xf86SetStrOption(pInfo->options, "Rotate", NULL);
 	if (s) {
