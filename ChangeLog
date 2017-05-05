@@ -2,13 +2,13 @@
 	xf86-input-tslib 1.0.0 includes the following changes:
 	* dropped support for GET_ABI_MAJOR() < 14
 
-	* multitouch support
+	* multitouch support for >= libts.so.0.7.0 (tslib 1.10)
 
-	* be explicitely Linux dependent
+	* depending on Linux now
 
 	* print in consistent X.org standard logging format
 
-	* greatly simpified code
+	* greatly simpified codebase
 
 2017-04-28  Martin Kepplinger <martink@posteo.de>
 
