@@ -50,6 +50,9 @@
 #include <time.h>
 
 #include <tslib.h>
+/* test old legacy interface with tslib 1.10+
+#undef TSLIB_VERSION_MT
+ */
 
 #ifdef TSLIB_VERSION_MT
 #include <errno.h>
