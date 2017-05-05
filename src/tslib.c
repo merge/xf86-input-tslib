@@ -70,156 +70,52 @@
 #define HAVE_THREADED_INPUT	1
 #endif
 
-enum button_state { BUTTON_NOT_PRESSED = 0, BUTTON_1_PRESSED = 1, BUTTON_3_CLICK = 3, BUTTON_3_CLICKED = 4, BUTTON_EMULATION_OFF = -1 };
-
 struct ts_priv {
 	struct tsdev *ts;
-	int lastx, lasty, lastp;
 	int height;
 	int width;
-	enum button_state state;
-	struct timeval button_down_start;
-	int button_down_x, button_down_y;
-
+	struct ts_sample last;
+	ValuatorMask *valuators;
 #ifdef TSLIB_VERSION_MT
 	struct ts_sample_mt **samp_mt;
 	struct ts_sample_mt *last_mt;
-	ValuatorMask *valuators;
 #endif
 };
-
-static struct timeval TimevalDiff(struct timeval a, struct timeval b)
-{
-	struct timeval t;
-	t.tv_sec = a.tv_sec-b.tv_sec;
-	t.tv_usec = a.tv_usec - b.tv_usec;
-	if (t.tv_usec < 0) {
-		t.tv_sec--;
-		t.tv_usec += 1000000;
-	}
-    return t;
-}
 
 static void ReadInputLegacy(InputInfoPtr local)
 {
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
 	struct ts_sample samp;
 	int ret;
-	struct timeval now;
+	int type;
 
 	while ((ret = ts_read(priv->ts, &samp, 1)) == 1) {
-		gettimeofday(&now, NULL);
-		struct timeval pressureTime = TimevalDiff(now, priv->button_down_start);
+		ValuatorMask *m = priv->valuators;
 
-		if (samp.pressure) {
-			priv->lastx = samp.x;
-			priv->lasty = samp.y;
-
-			xf86PostMotionEvent (local->dev, TRUE, 0, 2,
-					samp.x, samp.y);
-
+		if (priv->last.pressure == 0 && samp.pressure > 0) {
+			type = XI_TouchBegin;
+		} else if (priv->last.pressure > 0 && samp.pressure == 0) {
+			type = XI_TouchEnd;
+		} else if (priv->last.pressure > 0 && samp.pressure > 0) {
+			type = XI_TouchUpdate;
 		}
 
-		/* button pressed state machine
-		 * if pressed than press button 1, start timer and remember the tab position
-		 * if pressed longer than TIME23RDBUTTON and it is not moved more than MOVEMENT23RDBUTTON release button 1 and click button 3
-		 * if still pressed do nothing until the pressure is released
-		 */
-		switch (priv->state) {
-			 case BUTTON_EMULATION_OFF:
-				if (priv->lastp != samp.pressure) {
-					 priv->lastp = samp.pressure;
-					 xf86PostButtonEvent(local->dev, TRUE,
-						 1, !!samp.pressure, 0, 2,
-						 priv->lastx,
-						 priv->lasty);
-				}
-				break;
-			case BUTTON_NOT_PRESSED:
-				if (samp.pressure) {
-					priv->button_down_start = now;
-					priv->button_down_y = samp.y;
-					priv->button_down_x = samp.x;
-					priv->state = BUTTON_1_PRESSED;
-				#ifdef DEBUG
-					xf86IDrvMsg(local, X_ERROR, "button 1 down\n");
-				#endif
-					xf86PostButtonEvent(local->dev, TRUE,
-						priv->state, TRUE, 0, 2,
-						priv->lastx,
-						priv->lasty);
-				}
-				break;
-			case BUTTON_1_PRESSED:
-				if (samp.pressure) {
-				#ifdef DEBUG
-					xf86IDrvMsg(local, X_ERROR,
-						    "%d %d ",pressureTime.tv_sec,pressureTime.tv_usec);
-				#endif
-					if ((((double)pressureTime.tv_sec)+(((double)pressureTime.tv_usec)*1e-6) > TIME23RDBUTTON) &&
-					   (abs(priv->lastx-priv->button_down_x) < MOVEMENT23RDBUTTON &&
-					    abs(priv->lasty-priv->button_down_y) < MOVEMENT23RDBUTTON)) {
-					#ifdef DEBUG
-						xf86IDrvMsg(local, X_ERROR, "button 1 up\n");
-					#endif
-						xf86PostButtonEvent(local->dev, TRUE,
-							priv->state, FALSE, 0, 2,
-							priv->lastx,
-							priv->lasty);
-						priv->state = BUTTON_3_CLICK;
-					#ifdef DEBUG
-						xf86IDrvMsg(local, X_ERROR, "button 3 down\n");
-					#endif
-						xf86PostButtonEvent(local->dev, TRUE,
-							priv->state, TRUE, 0, 2,
-							priv->lastx,
-							priv->lasty);
-					}
-					if (abs(priv->lastx-priv->button_down_x) > MOVEMENT23RDBUTTON ||
-					    abs(priv->lasty-priv->button_down_y) > MOVEMENT23RDBUTTON) {
-						priv->button_down_start = now;
-						priv->button_down_y = samp.y;
-						priv->button_down_x = samp.x;
-					#ifdef DEBUG
-						xf86IDrvMsg(local, X_ERROR, "button 1 state reset\n");
-					#endif
-					}
-				} else {
-				#ifdef DEBUG
-					xf86IDrvMsg(local, X_ERROR, "button 1 up\n");
-				#endif
-					xf86PostButtonEvent(local->dev, TRUE,
-						priv->state, FALSE, 0, 2,
-						priv->lastx,
-						priv->lasty);
-					priv->state = BUTTON_NOT_PRESSED;
-				}
-				break;
-			case BUTTON_3_CLICK:
-			#ifdef DEBUG
-				xf86IDrvMsg(local, X_ERROR, "button 3 up\n");
-			#endif
-				xf86PostButtonEvent(local->dev, TRUE,
-					priv->state, FALSE, 0, 2,
-					priv->lastx,
-					priv->lasty);
-				priv->state = BUTTON_3_CLICKED;
-				break;
-			case BUTTON_3_CLICKED:
-				if (!samp.pressure) {
-				#ifdef DEBUG
-					xf86IDrvMsg(local, X_ERROR, "button 3 free\n");
-				#endif
-					priv->state = BUTTON_NOT_PRESSED;
-				}
-				break;
+		valuator_mask_zero(m);
+
+		if (type != XI_TouchEnd) {
+			valuator_mask_set_double(m, 0, samp.x);
+			valuator_mask_set_double(m, 1, samp.y);
 		}
+
+		xf86PostTouchEvent(local->dev, 0, type, 0, m);
+
+		memcpy(&priv->last, &samp, sizeof(struct ts_sample));
 	}
-
 	if (ret < 0) {
 		xf86IDrvMsg(local, X_ERROR, "ts_read failed\n");
 		return;
 	}
+
 }
 
 #ifdef TSLIB_VERSION_MT
@@ -427,9 +323,8 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 	free(priv->samp_mt);
 	free(priv->last_mt);
-	valuator_mask_free(&priv->valuators);
 #endif
-
+	valuator_mask_free(&priv->valuators);
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
 	free(pInfo->private);
@@ -467,7 +362,6 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		s = xf86SetStrOption(pInfo->options, "Device", NULL);
 
 	priv->ts = ts_setup(s, 1);
-//	free(s);
 
 	if (!priv->ts) {
 		xf86IDrvMsg(pInfo, X_ERROR, "ts_setup failed (device=%s)\n", s);
@@ -477,13 +371,13 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 	pInfo->fd = ts_fd(priv->ts);
 
-	priv->state = BUTTON_NOT_PRESSED;
-	if (xf86SetIntOption(pInfo->options, "EmulateRightButton", 0) == 0)
-		priv->state = BUTTON_EMULATION_OFF;
-
 	/* process generic options */
 	xf86CollectInputOptions(pInfo, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
+
+	priv->valuators = valuator_mask_new(6);
+	if (!priv->valuators)
+		return BadValue;
 
 #ifdef TSLIB_VERSION_MT
 	priv->samp_mt = malloc(TOUCH_SAMPLES_READ * sizeof(struct ts_sample_mt *));
@@ -500,9 +394,6 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	if (!priv->last_mt)
 		return BadValue;
 
-	priv->valuators = valuator_mask_new(6);
-	if (!priv->valuators)
-		return BadValue;
 #endif /* TSLIB_VERSION_MT */
 
 	/* Return the configured device */
