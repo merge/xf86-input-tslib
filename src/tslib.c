@@ -60,8 +60,8 @@
 
 #define TOUCH_MAX_SLOTS 15
 #define TOUCH_SAMPLES_READ 1
+#define TOUCHPAD_NUM_AXES 4 /* x, y, hscroll, vscroll */
 
-#define MAXBUTTONS 3
 #define TIME23RDBUTTON 0.5
 #define MOVEMENT23RDBUTTON 4
 
@@ -354,8 +354,8 @@ static int
 xf86TslibControlProc(DeviceIntPtr device, int what)
 {
 	InputInfoPtr pInfo;
-	unsigned char map[MAXBUTTONS + 1];
-	Atom labels[MAXBUTTONS];
+	unsigned char map[MAX_BUTTONS + 1];
+	Atom labels[MAX_BUTTONS];
 	int i, axiswidth, axisheight;
 	struct ts_priv *priv;
 
@@ -369,12 +369,12 @@ xf86TslibControlProc(DeviceIntPtr device, int what)
 	case DEVICE_INIT:
 		device->public.on = FALSE;
 
-		for (i = 0; i < MAXBUTTONS; i++) {
+		for (i = 0; i < MAX_BUTTONS; i++) {
 			map[i + 1] = i + 1;
 		}
-		xf86TslibInitButtonLabels(labels, MAXBUTTONS);
+		xf86TslibInitButtonLabels(labels, MAX_BUTTONS);
 
-		if (InitButtonClassDeviceStruct(device, MAXBUTTONS,
+		if (InitButtonClassDeviceStruct(device, MAX_BUTTONS,
 						labels,
 						map) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
@@ -575,15 +575,6 @@ _X_EXPORT InputDriverRec TSLIB = {
  */
 
 /*
- * xf86TslibUnplug --
- *
- * called when the module subsection is found in XF86Config
- */
-static void xf86TslibUnplug(pointer p)
-{
-}
-
-/*
  * xf86TslibPlug --
  *
  * called when the module subsection is found in XF86Config
@@ -591,10 +582,7 @@ static void xf86TslibUnplug(pointer p)
 static pointer xf86TslibPlug(pointer module, pointer options, int *errmaj,
 			     int *errmin)
 {
-	static Bool Initialised = FALSE;
-
 	xf86AddInputDriver(&TSLIB, module, 0);
-
 	return module;
 }
 
@@ -613,7 +601,7 @@ static XF86ModuleVersionInfo xf86TslibVersionRec = {
 };
 
 _X_EXPORT XF86ModuleData tslibModuleData = {
-	&xf86TslibVersionRec,
-	xf86TslibPlug,
-	xf86TslibUnplug
+	.vers = &xf86TslibVersionRec,
+	.setup = xf86TslibPlug,
+	.teardown = NULL
 };
