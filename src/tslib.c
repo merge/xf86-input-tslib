@@ -97,6 +97,12 @@ struct ts_priv {
 	enum button_state state;
 	struct timeval button_down_start;
 	int button_down_x, button_down_y;
+
+#ifdef TSLIB_VERSION_MT
+	struct ts_sample_mt **samp_mt;
+	struct ts_sample_mt *last_mt;
+	ValuatorMask *valuators;
+#endif
 };
 
 static void
@@ -465,6 +471,17 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	xf86IDrvMsg(pInfo, X_ERROR, "%s\n", __FUNCTION__);
 #endif
 
+#ifdef TSLIB_VERSION_MT
+	int i;
+
+	for (i = 0; i < TOUCH_SAMPLES_READ; i++)
+		free(priv->samp_mt[i]);
+
+	free(priv->samp_mt);
+	free(priv->last_mt);
+	valuator_mask_free(&priv->valuators);
+#endif
+
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
 	free(pInfo->private);
@@ -482,6 +499,7 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	struct ts_priv *priv;
 	char *s;
+	int i;
 
 	priv = calloc(1, sizeof (struct ts_priv));
 	if (!priv)
@@ -548,6 +566,26 @@ xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	priv->state = BUTTON_NOT_PRESSED;
 	if (xf86SetIntOption(pInfo->options, "EmulateRightButton", 0) == 0)
 		priv->state = BUTTON_EMULATION_OFF;
+
+#ifdef TSLIB_VERSION_MT
+	priv->samp_mt = malloc(TOUCH_SAMPLES_READ * sizeof(struct ts_sample_mt *));
+	if (!priv->samp_mt)
+		return BadValue;
+
+	for (i = 0; i < TOUCH_SAMPLES_READ; i++) {
+		priv->samp_mt[i] = calloc(TOUCH_MAX_SLOTS, sizeof(struct ts_sample_mt));
+		if (!priv->samp_mt[i])
+			return BadValue;
+	}
+
+	priv->last_mt = calloc(TOUCH_MAX_SLOTS, sizeof(struct ts_sample_mt));
+	if (!priv->last_mt)
+		return BadValue;
+
+	priv->valuators = valuator_mask_new(6);
+	if (!priv->valuators)
+		return BadValue;
+#endif /* TSLIB_VERSION_MT */
 
 	/* Return the configured device */
 	return Success;
