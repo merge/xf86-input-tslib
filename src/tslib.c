@@ -51,6 +51,12 @@
 
 #include <tslib.h>
 
+#ifdef TSLIB_VERSION_MT
+#include <errno.h>
+#endif
+
+#define TOUCH_MAX_SLOTS 15
+#define TOUCH_SAMPLES_READ 1
 
 #define MAXBUTTONS 3
 #define TIME23RDBUTTON 0.5
