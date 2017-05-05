@@ -61,7 +61,7 @@
 
 #define TOUCH_MAX_SLOTS 15
 #define TOUCH_SAMPLES_READ 1
-#define TOUCHPAD_NUM_AXES 4 /* x, y, hscroll, vscroll */
+#define MAXBUTTONS 11
 
 #define TIME23RDBUTTON 0.5
 #define MOVEMENT23RDBUTTON 4
@@ -310,8 +310,8 @@ static void init_button_labels(Atom *labels, size_t size)
 static int xf86TslibControlProc(DeviceIntPtr device, int what)
 {
 	InputInfoPtr pInfo;
-	unsigned char map[MAX_BUTTONS + 1];
-	Atom labels[MAX_BUTTONS];
+	unsigned char map[MAXBUTTONS + 1];
+	Atom labels[MAXBUTTONS];
 	int i, axiswidth, axisheight;
 	struct ts_priv *priv;
 
@@ -326,13 +326,13 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 		device->public.on = FALSE;
 
 		memset(map, 0, sizeof(map));
-		for (i = 0; i < MAX_BUTTONS; i++)
+		for (i = 0; i < MAXBUTTONS; i++)
 			map[i + 1] = i + 1;
 
 		init_button_labels(labels, ARRAY_SIZE(labels));
 
 		if (InitButtonClassDeviceStruct(device,
-						MAX_BUTTONS,
+						MAXBUTTONS,
 						labels,
 						map) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
