@@ -390,7 +390,7 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		return BadValue;
 	}
 	priv->width = abs_mt_x.maximum;
-	priv->height = abs_mt_x.maximum;
+	priv->height = abs_mt_y.maximum;
 
 	/* process generic options */
 	xf86CollectInputOptions(pInfo, NULL);
