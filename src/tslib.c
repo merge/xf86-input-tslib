@@ -338,7 +338,8 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	struct ts_priv *priv;
 	char *s;
 	int i;
-	struct input_absinfo abs;
+	struct input_absinfo abs_mt_x;
+	struct input_absinfo abs_mt_y;
 #ifdef TSLIB_VERSION_MT
 	struct ts_lib_version_data *ver = ts_libversion();
 #endif
@@ -354,12 +355,6 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	pInfo->switch_mode = NULL;
 	pInfo->private = priv;
 	pInfo->dev = NULL;
-
-/* TODO use ioctl and get them */
-	priv->width = xf86SetIntOption(pInfo->options, "Width", 1280);
-
-	priv->height = xf86SetIntOption(pInfo->options, "Height", 800);
-/********************************/
 
 	s = xf86SetStrOption(pInfo->options, "path", NULL);
 	if (!s)
@@ -390,6 +385,17 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 #endif
 
 	pInfo->fd = ts_fd(priv->ts);
+
+	if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &abs_mt_x) < 0) {
+		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+		return BadValue;
+	}
+	if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_Y), &abs_mt_y) < 0) {
+		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+		return BadValue;
+	}
+	priv->width = abs_mt_x.maximum;
+	priv->height = abs_mt_x.maximum;
 
 	/* process generic options */
 	xf86CollectInputOptions(pInfo, NULL);
