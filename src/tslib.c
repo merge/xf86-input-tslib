@@ -1,8 +1,7 @@
 /*
+ * (c) 2017 Martin Kepplinger <martink@posteo.de>
+ * (c) 2007 Clement Chauplannaz, Thales e-Transactions <chauplac@gmail.com>
  * (c) 2006 Sascha Hauer, Pengutronix <s.hauer@pengutronix.de>
- *
- * 20070416 Support for rotated displays by
- *          Clement Chauplannaz, Thales e-Transactions <chauplac@gmail.com>
  *
  * derived from the xf86-input-void driver
  * Copyright 1999 by Frederic Lepied, France. <Lepied@XFree86.org>
