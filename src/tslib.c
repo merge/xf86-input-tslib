@@ -303,11 +303,6 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 	return Success;
 }
 
-/*
- * xf86TslibUninit --
- *
- * called when the driver is unloaded.
- */
 static void
 xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
@@ -438,19 +433,6 @@ _X_EXPORT InputDriverRec TSLIB = {
 #endif
 };
 
-/*
- ***************************************************************************
- *
- * Dynamic loading functions
- *
- ***************************************************************************
- */
-
-/*
- * xf86TslibPlug --
- *
- * called when the module subsection is found in XF86Config
- */
 static pointer xf86TslibPlug(pointer module, pointer options, int *errmaj,
 			     int *errmin)
 {
@@ -468,8 +450,7 @@ static XF86ModuleVersionInfo xf86TslibVersionRec = {
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
 	MOD_CLASS_XINPUT,
-	{0, 0, 0, 0}		/* signature, to be patched into the file by */
-	/* a tool */
+	{0, 0, 0, 0}	/* signature, to be patched into the file by a tool */
 };
 
 _X_EXPORT XF86ModuleData tslibModuleData = {
