@@ -64,7 +64,7 @@
 #endif
 
 #define TOUCH_MAX_SLOTS 15
-#define TOUCH_SAMPLES_READ 1
+#define TOUCH_SAMPLES_READ 5
 #define MAXBUTTONS 11 /* > 10 */
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
