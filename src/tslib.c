@@ -40,7 +40,7 @@
 #endif
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
-#include <exevents.h>		/* Needed for InitValuator/Proximity stuff */
+#include <exevents.h>
 #include <X11/keysym.h>
 #include <mipointer.h>
 #include <randrstr.h>
@@ -66,10 +66,7 @@
 
 #define TOUCH_MAX_SLOTS 15
 #define TOUCH_SAMPLES_READ 1
-#define MAXBUTTONS 11
-
-#define TIME23RDBUTTON 0.5
-#define MOVEMENT23RDBUTTON 4
+#define MAXBUTTONS 11 /* > 10 */
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
 #define HAVE_THREADED_INPUT	1
