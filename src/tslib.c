@@ -223,12 +223,12 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 	int i, axiswidth, axisheight;
 	struct ts_priv *priv;
 
-#ifdef DEBUG
-	xf86IDrvMsg(pInfo, X_ERROR, "%s\n", __FUNCTION__);
-#endif
 	pInfo = device->public.devicePrivate;
 	priv = pInfo->private;
 
+#ifdef DEBUG
+	xf86IDrvMsg(pInfo, X_ERROR, "%s\n", __FUNCTION__);
+#endif
 	switch (what) {
 	case DEVICE_INIT:
 		device->public.on = FALSE;
