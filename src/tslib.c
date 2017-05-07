@@ -322,7 +322,9 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 }
 
 static void
-xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+xf86TslibUninit(__attribute__ ((unused)) InputDriverPtr drv,
+		InputInfoPtr pInfo,
+		__attribute__ ((unused)) int flags)
 {
 	struct ts_priv *priv = (struct ts_priv *)(pInfo->private);
 #ifdef DEBUG
@@ -358,11 +360,12 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 # define ABS_CNT (ABS_MAX+1)
 #endif
 
-static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
+			 InputInfoPtr pInfo,
+			 __attribute__ ((unused)) int flags)
 {
 	struct ts_priv *priv;
 	char *s;
-	int i;
 	struct input_absinfo absinfo;
 #ifdef TSLIB_VERSION_MT
 	struct ts_lib_version_data *ver = ts_libversion();
@@ -437,6 +440,8 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 
 #ifdef TSLIB_VERSION_MT
+	int i;
+
 	priv->samp_mt = malloc(priv->slots * sizeof(struct ts_sample_mt *));
 	if (!priv->samp_mt)
 		return BadValue;
@@ -523,8 +528,10 @@ _X_EXPORT InputDriverRec TSLIB = {
 #endif
 };
 
-static pointer xf86TslibPlug(pointer module, pointer options, int *errmaj,
-			     int *errmin)
+static pointer xf86TslibPlug(pointer module,
+			     __attribute__ ((unused)) pointer options,
+			     __attribute__ ((unused)) int *errmaj,
+			     __attribute__ ((unused)) int *errmin)
 {
 	xf86AddInputDriver(&TSLIB, module, 0);
 	return module;
