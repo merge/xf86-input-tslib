@@ -26,6 +26,9 @@ To _uninstall_, again go inside the extracted directory, and do
 
     sudo make uninstall
 
+### multitouch
+if you use tslib 1.10 or higher (libts.so.0.7.0 or higher), you have multitouch.
+
 ### contact
 * If you have problems or suggestions, feel free to
 [open an issue](https://github.com/merge/xf86-input-tslib/issues).
