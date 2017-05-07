@@ -128,7 +128,7 @@ static void ReadInputLegacy(InputInfoPtr local)
 static void ReadHandleMTSample(InputInfoPtr local, int nr, int slot)
 {
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
-	int type;
+	int type = 0;
 	static unsigned int next_touchid;
 	ValuatorMask *m = priv->valuators;
 
