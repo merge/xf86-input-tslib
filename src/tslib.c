@@ -88,6 +88,13 @@ struct ts_priv {
 #endif
 };
 
+static int errfn(const char *fmt, va_list ap)
+{
+	xf86ErrorF(fmt, ap);
+
+        return vfprintf(stderr, fmt, ap);
+}
+
 static void ReadInputLegacy(InputInfoPtr local)
 {
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
@@ -415,6 +422,8 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	priv->slots = 0;
 
 	pInfo->fd = ts_fd(priv->ts);
+
+	ts_error_fn = errfn;
 
 	/* process generic options */
 	xf86CollectInputOptions(pInfo, NULL);
