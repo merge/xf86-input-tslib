@@ -2,23 +2,20 @@
 [X.org](https://x.org/) [tslib](http://tslib.org) input driver
 
 ### how to use
-xf86-input-tslib assumes you have only one touchscreen device available. If
-there are multiple in your system, please specify the config file `80-tslib.conf`.
+xf86-input-tslib assumes you have only one touchscreen device available, see
+`80-tslib.conf`. If there are multiple in your system, please specify one config
+section for each.
 xf86-input-tslib aims to make [tslib](http://tslib.org) easy to use and doesn't
-offer special configuration options. Only make sure you have tslib
-[installed](https://github.com/kergoth/tslib/blob/master/README.md#install-tslib).
+offer special configuration options.
 
-To install alongside other X.org drivers and override other existing touchscreen
-drivers,
-[download](https://github.com/merge/xf86-input-tslib/releases) and extract the
-latest release tarball, `cd xf86-input-tslib` into the extracted directory and
-do
-
-    ./configure --prefix=/usr
-    make
-    sudo make install
+* have tslib (libts) [installed](https://github.com/kergoth/tslib/blob/master/README.md#install-tslib).
+* [download](https://github.com/merge/xf86-input-tslib/releases) and extract.
+* `cd xf86-input-tslib` into the extracted directory
+* `./configure --prefix=/usr`
+* `make`
+* `sudo make install`
     
-Done. Use [tslib's ts.conf](https://github.com/kergoth/tslib/blob/master/README.md#configure-tslib)
+Done. Configure your [tslib's ts.conf](https://github.com/kergoth/tslib/blob/master/README.md#configure-tslib)
 (which is probably why you installed xf86-input-tslib in the first place :) ) and
 reboot.
 
