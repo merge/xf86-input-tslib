@@ -64,8 +64,8 @@
 #include <errno.h>
 #endif
 
-#define TOUCH_MAX_SLOTS 15
-#define TOUCH_SAMPLES_READ 5
+#define TOUCH_MAX_SLOTS 10	/* fallback if not found */
+#define TOUCH_SAMPLES_READ 3	/* up to, if available */
 #define MAXBUTTONS 11 /* > 10 */
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
@@ -79,6 +79,8 @@ struct ts_priv {
 	struct ts_sample last;
 	ValuatorMask *valuators;
 	int8_t abs_x_only;
+	uint16_t slots;
+	uint32_t *touchids;
 
 #ifdef TSLIB_VERSION_MT
 	struct ts_sample_mt **samp_mt;
@@ -128,12 +130,11 @@ static void ReadHandleMTSample(InputInfoPtr local, int nr, int slot)
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
 	int type;
 	static unsigned int next_touchid;
-	static unsigned int touchids[TOUCH_MAX_SLOTS] = {0};
 	ValuatorMask *m = priv->valuators;
 
 	if (priv->last_mt[slot].pressure == 0 && priv->samp_mt[nr][slot].pressure > 0) {
 		type = XI_TouchBegin;
-		touchids[slot] = next_touchid++;
+		priv->touchids[slot] = next_touchid++;
 	} else if (priv->last_mt[slot].pressure > 0 && priv->samp_mt[nr][slot].pressure == 0) {
 		type = XI_TouchEnd;
 	} else if (priv->last_mt[slot].pressure > 0 && priv->samp_mt[nr][slot].pressure > 0) {
@@ -147,7 +148,7 @@ static void ReadHandleMTSample(InputInfoPtr local, int nr, int slot)
 		valuator_mask_set_double(m, 1, priv->samp_mt[nr][slot].y);
 	}
 
-	xf86PostTouchEvent(local->dev, touchids[slot], type, 0, m);
+	xf86PostTouchEvent(local->dev, priv->touchids[slot], type, 0, m);
 }
 
 static void ReadInputMT(InputInfoPtr local)
@@ -158,14 +159,14 @@ static void ReadInputMT(InputInfoPtr local)
 
 	while (1) {
 		ret = ts_read_mt(priv->ts, priv->samp_mt,
-				 TOUCH_MAX_SLOTS, TOUCH_SAMPLES_READ);
+				 priv->slots, TOUCH_SAMPLES_READ);
 		if (ret == -ENOSYS) /* tslib module_raw without MT support */
 			ReadInputLegacy(local);
 		else if (ret <= 0)
 			return;
 
 		for (i = 0; i < ret; i++) {
-			for (j = 0; j < TOUCH_MAX_SLOTS; j++) {
+			for (j = 0; j < priv->slots; j++) {
 				if (priv->samp_mt[i][j].valid != 1)
 					continue;
 
@@ -290,7 +291,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 		}
 
 		if (InitTouchClassDeviceStruct(device,
-					       TOUCH_MAX_SLOTS,
+					       priv->slots,
 					       XIDirectTouch,
 					       2 /* axes */) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
@@ -362,8 +363,7 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	struct ts_priv *priv;
 	char *s;
 	int i;
-	struct input_absinfo abs_x;
-	struct input_absinfo abs_y;
+	struct input_absinfo absinfo;
 #ifdef TSLIB_VERSION_MT
 	struct ts_lib_version_data *ver = ts_libversion();
 #endif
@@ -409,6 +409,8 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 #endif
 
+	priv->slots = 0;
+
 	pInfo->fd = ts_fd(priv->ts);
 
 	/* process generic options */
@@ -419,27 +421,52 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	if (!priv->valuators)
 		return BadValue;
 
-#ifdef TSLIB_VERSION_MT
-	priv->samp_mt = malloc(TOUCH_SAMPLES_READ * sizeof(struct ts_sample_mt *));
-	if (!priv->samp_mt)
-		return BadValue;
-
-	for (i = 0; i < TOUCH_SAMPLES_READ; i++) {
-		priv->samp_mt[i] = calloc(TOUCH_MAX_SLOTS, sizeof(struct ts_sample_mt));
-		if (!priv->samp_mt[i])
-			return BadValue;
-	}
-
-	priv->last_mt = calloc(TOUCH_MAX_SLOTS, sizeof(struct ts_sample_mt));
-	if (!priv->last_mt)
-		return BadValue;
-
-#endif /* TSLIB_VERSION_MT */
-
 	if (ioctl(pInfo->fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) < 0) {
 		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOCGBIT failed");
 		return BadValue;
 	}
+
+	if (absbit[BIT_WORD(ABS_MT_SLOT)] & BIT_MASK(ABS_MT_SLOT)) {
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_X), &absinfo) < 0) {
+			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+			return BadValue;
+		}
+		priv->slots = absinfo.maximum;
+	} else {
+		priv->slots = TOUCH_MAX_SLOTS;
+	}
+
+#ifdef TSLIB_VERSION_MT
+	priv->samp_mt = malloc(priv->slots * sizeof(struct ts_sample_mt *));
+	if (!priv->samp_mt)
+		return BadValue;
+
+	for (i = 0; i < TOUCH_SAMPLES_READ; i++) {
+		priv->samp_mt[i] = calloc(priv->slots, sizeof(struct ts_sample_mt));
+		if (!priv->samp_mt[i])
+			return BadValue;
+	}
+
+	priv->last_mt = calloc(priv->slots, sizeof(struct ts_sample_mt));
+	if (!priv->last_mt) {
+		for (i = 0; i < TOUCH_SAMPLES_READ; i++)
+			free(priv->samp_mt[i]);
+
+		free(priv->samp_mt);
+		return BadValue;
+	}
+
+	priv->touchids = calloc(priv->slots, sizeof(uint32_t));
+	if (!priv->touchids) {
+		for (i = 0; i < TOUCH_SAMPLES_READ; i++)
+			free(priv->samp_mt[i]);
+
+		free(priv->samp_mt);
+		free(priv->last_mt);
+		return BadValue;
+	}
+
+#endif /* TSLIB_VERSION_MT */
 
 	if (!(absbit[BIT_WORD(ABS_MT_POSITION_X)] & BIT_MASK(ABS_MT_POSITION_X)) ||
 	    !(absbit[BIT_WORD(ABS_MT_POSITION_Y)] & BIT_MASK(ABS_MT_POSITION_Y))) {
@@ -455,27 +482,29 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 
 	if (priv->abs_x_only) {
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_X), &abs_x) < 0) {
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_X), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_Y), &abs_y) < 0) {
+		priv->width = absinfo.maximum;
+
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_Y), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
-		priv->width = abs_x.maximum;
-		priv->height = abs_y.maximum;
+		priv->height = absinfo.maximum;
 	} else {
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &abs_x) < 0) {
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_Y), &abs_y) < 0) {
+		priv->width = absinfo.maximum;
+
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_Y), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
-		priv->width = abs_x.maximum;
-		priv->height = abs_y.maximum;
+		priv->height = absinfo.maximum;
 	}
 
 	/* Return the configured device */
