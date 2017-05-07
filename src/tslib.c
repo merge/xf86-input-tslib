@@ -47,6 +47,7 @@
 
 #include <sys/time.h>
 #include <time.h>
+#include <stdint.h>
 
 #if defined (__FreeBSD__)
 #include <dev/evdev/input.h>
@@ -77,6 +78,8 @@ struct ts_priv {
 	int width;
 	struct ts_sample last;
 	ValuatorMask *valuators;
+	int8_t abs_x_only;
+
 #ifdef TSLIB_VERSION_MT
 	struct ts_sample_mt **samp_mt;
 	struct ts_sample_mt *last_mt;
@@ -248,29 +251,43 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 
 		axiswidth = priv->width;
 		axisheight = priv->height;
+		if (priv->abs_x_only) {
+			InitValuatorAxisStruct(device, 0,
+					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
+					       0,		/* min val */
+					       axiswidth - 1,	/* max val */
+					       axiswidth,	/* resolution */
+					       0,		/* min_res */
+					       axiswidth,	/* max_res */
+					       Absolute);
 
-		/* TODO
-		one unified touch init that both read function can work with.
-		at first ABS_MT_POS X/Y only!
-		later ABS_X handling like evdev does
-		*/
-		InitValuatorAxisStruct(device, 0,
-				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
-				       0,		/* min val */
-				       axiswidth - 1,	/* max val */
-				       axiswidth,	/* resolution */
-				       0,		/* min_res */
-				       axiswidth,	/* max_res */
-				       Absolute);
+			InitValuatorAxisStruct(device, 1,
+					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
+					       0,		/* min val */
+					       axisheight - 1,	/* max val */
+					       axisheight,	/* resolution */
+					       0,		/* min_res */
+					       axisheight,	/* max_res */
+					       Absolute);
+		} else {
+			InitValuatorAxisStruct(device, 0,
+					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
+					       0,		/* min val */
+					       axiswidth - 1,	/* max val */
+					       axiswidth,	/* resolution */
+					       0,		/* min_res */
+					       axiswidth,	/* max_res */
+					       Absolute);
 
-		InitValuatorAxisStruct(device, 1,
-				       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
-				       0,		/* min val */
-				       axisheight - 1,	/* max val */
-				       axisheight,	/* resolution */
-				       0,		/* min_res */
-				       axisheight,	/* max_res */
-				       Absolute);
+			InitValuatorAxisStruct(device, 1,
+					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
+					       0,		/* min val */
+					       axisheight - 1,	/* max val */
+					       axisheight,	/* resolution */
+					       0,		/* min_res */
+					       axisheight,	/* max_res */
+					       Absolute);
+		}
 
 		if (InitTouchClassDeviceStruct(device,
 					       TOUCH_MAX_SLOTS,
@@ -328,16 +345,29 @@ xf86TslibUninit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	xf86DeleteInput(pInfo, 0);
 }
 
+#define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
+#define BIT(nr)                 (1UL << (nr))
+#define BIT_MASK(nr)            (1UL << ((nr) % BITS_PER_LONG))
+#define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
+#define BITS_PER_BYTE           8
+#define BITS_PER_LONG           (sizeof(long) * BITS_PER_BYTE)
+#define BITS_TO_LONGS(nr)       DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
+
+#ifndef ABS_CNT /* < 2.6.24 kernel headers */
+# define ABS_CNT (ABS_MAX+1)
+#endif
+
 static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	struct ts_priv *priv;
 	char *s;
 	int i;
-	struct input_absinfo abs_mt_x;
-	struct input_absinfo abs_mt_y;
+	struct input_absinfo abs_x;
+	struct input_absinfo abs_y;
 #ifdef TSLIB_VERSION_MT
 	struct ts_lib_version_data *ver = ts_libversion();
 #endif
+	long absbit[BITS_TO_LONGS(ABS_CNT)];
 
 	priv = calloc(1, sizeof (struct ts_priv));
 	if (!priv)
@@ -381,17 +411,6 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 	pInfo->fd = ts_fd(priv->ts);
 
-	if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &abs_mt_x) < 0) {
-		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
-		return BadValue;
-	}
-	if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_Y), &abs_mt_y) < 0) {
-		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
-		return BadValue;
-	}
-	priv->width = abs_mt_x.maximum;
-	priv->height = abs_mt_y.maximum;
-
 	/* process generic options */
 	xf86CollectInputOptions(pInfo, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
@@ -416,6 +435,48 @@ static int xf86TslibInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		return BadValue;
 
 #endif /* TSLIB_VERSION_MT */
+
+	if (ioctl(pInfo->fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) < 0) {
+		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOCGBIT failed");
+		return BadValue;
+	}
+
+	if (!(absbit[BIT_WORD(ABS_MT_POSITION_X)] & BIT_MASK(ABS_MT_POSITION_X)) ||
+	    !(absbit[BIT_WORD(ABS_MT_POSITION_Y)] & BIT_MASK(ABS_MT_POSITION_Y))) {
+		if (!(absbit[BIT_WORD(ABS_X)] & BIT_MASK(ABS_X)) ||
+		    !(absbit[BIT_WORD(ABS_Y)] & BIT_MASK(ABS_Y))) {
+			xf86IDrvMsg(pInfo, X_ERROR, "no touchscreen device");
+			return BadValue;
+		} else {
+			priv->abs_x_only = 1;
+		}
+	} else {
+		priv->abs_x_only = 0;
+	}
+
+	if (priv->abs_x_only) {
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_X), &abs_x) < 0) {
+			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+			return BadValue;
+		}
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_Y), &abs_y) < 0) {
+			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+			return BadValue;
+		}
+		priv->width = abs_x.maximum;
+		priv->height = abs_y.maximum;
+	} else {
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &abs_x) < 0) {
+			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+			return BadValue;
+		}
+		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_Y), &abs_y) < 0) {
+			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+			return BadValue;
+		}
+		priv->width = abs_x.maximum;
+		priv->height = abs_y.maximum;
+	}
 
 	/* Return the configured device */
 	return Success;
