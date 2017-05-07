@@ -58,6 +58,7 @@
 #include <tslib.h>
 /* test old legacy interface with tslib 1.10+
 #undef TSLIB_VERSION_MT
+#define DEBUG 1
  */
 
 #ifdef TSLIB_VERSION_MT
