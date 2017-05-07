@@ -91,6 +91,7 @@ PKG_CHECK_MODULES(XORG, xorg-server xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
+CFLAGS="-O2 -Wall -W -fPIC $CFLAGS"
 AC_SUBST([CFLAGS])
 
 # Checks for libraries.
