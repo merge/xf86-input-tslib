@@ -22,7 +22,7 @@
 # Process this file with autoconf to produce a configure script
 
 AC_PREREQ(2.59)
-AC_INIT([xf86-input-tslib],[0.0.7],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],[xf86-input-tslib])
+AC_INIT([xf86-input-tslib],[0.0.7],[https://github.com/merge/xf86-input-tslib/issues],[xf86-input-tslib],[https://github.com/merge/xf86-input-tslib])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
