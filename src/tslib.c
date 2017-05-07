@@ -93,7 +93,7 @@ static void ReadInputLegacy(InputInfoPtr local)
 	struct ts_priv *priv = (struct ts_priv *) (local->private);
 	struct ts_sample samp;
 	int ret;
-	int type;
+	int type = 0;
 
 	while ((ret = ts_read(priv->ts, &samp, 1)) == 1) {
 		ValuatorMask *m = priv->valuators;
