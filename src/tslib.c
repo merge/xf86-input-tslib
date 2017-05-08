@@ -231,7 +231,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 	unsigned char map[MAXBUTTONS + 1];
 	Atom labels[MAXBUTTONS];
 	Atom axis_labels[2];
-	int i, axiswidth, axisheight;
+	int i;
 	struct ts_priv *priv;
 
 	pInfo = device->public.devicePrivate;
@@ -269,43 +269,41 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 			return !Success;
 		}
 
-		axiswidth = priv->width;
-		axisheight = priv->height;
 		if (priv->abs_x_only) {
 			InitValuatorAxisStruct(device, 0,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
 					       0,		/* min val */
-					       axiswidth - 1,	/* max val */
-					       axiswidth,	/* resolution */
+					       priv->width - 1,	/* max val */
+					       priv->width,	/* resolution */
 					       0,		/* min_res */
-					       axiswidth,	/* max_res */
+					       priv->width,	/* max_res */
 					       Absolute);
 
 			InitValuatorAxisStruct(device, 1,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
 					       0,		/* min val */
-					       axisheight - 1,	/* max val */
-					       axisheight,	/* resolution */
+					       priv->height - 1,/* max val */
+					       priv->height,	/* resolution */
 					       0,		/* min_res */
-					       axisheight,	/* max_res */
+					       priv->height,	/* max_res */
 					       Absolute);
 		} else {
 			InitValuatorAxisStruct(device, 0,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
 					       0,		/* min val */
-					       axiswidth - 1,	/* max val */
-					       axiswidth,	/* resolution */
+					       priv->width - 1,	/* max val */
+					       priv->width,	/* resolution */
 					       0,		/* min_res */
-					       axiswidth,	/* max_res */
+					       priv->width,	/* max_res */
 					       Absolute);
 
 			InitValuatorAxisStruct(device, 1,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
 					       0,		/* min val */
-					       axisheight - 1,	/* max val */
-					       axisheight,	/* resolution */
+					       priv->height - 1,/* max val */
+					       priv->height,	/* resolution */
 					       0,		/* min_res */
-					       axisheight,	/* max_res */
+					       priv->height,	/* max_res */
 					       Absolute);
 		}
 
