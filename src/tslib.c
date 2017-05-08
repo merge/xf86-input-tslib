@@ -67,7 +67,8 @@
 
 #define TOUCH_MAX_SLOTS 10	/* fallback if not found */
 #define TOUCH_SAMPLES_READ 3	/* up to, if available */
-#define MAXBUTTONS 11 /* > 10 */
+#define MAXBUTTONS 11		/* > 10 */
+#define TOUCH_NUM_AXES 2	/* x, y */
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
 #define HAVE_THREADED_INPUT	1
@@ -218,7 +219,7 @@ static void init_button_labels(Atom *labels, size_t size)
 
 static void init_axis_labels(Atom *labels, size_t size)
 {
-	assert(size >= 2);
+	assert(size >= TOUCH_NUM_AXES);
 
 	memset(labels, 0, size * sizeof(Atom));
 	labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
@@ -230,7 +231,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 	InputInfoPtr pInfo;
 	unsigned char map[MAXBUTTONS + 1];
 	Atom labels[MAXBUTTONS];
-	Atom axis_labels[2];
+	Atom axis_labels[TOUCH_NUM_AXES];
 	int i;
 	struct ts_priv *priv;
 
@@ -261,7 +262,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 		}
 
 		if (InitValuatorClassDeviceStruct(device,
-						  2,
+						  TOUCH_NUM_AXES,
 						  axis_labels,
 						  0, Absolute) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
@@ -310,7 +311,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 		if (InitTouchClassDeviceStruct(device,
 					       priv->slots,
 					       XIDirectTouch,
-					       2 /* axes */) == FALSE) {
+					       TOUCH_NUM_AXES) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
 				    "Unable to allocate TouchClassDeviceStruct\n");
 			return !Success;
@@ -439,7 +440,7 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	xf86CollectInputOptions(pInfo, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-	priv->valuators = valuator_mask_new(6);
+	priv->valuators = valuator_mask_new(TOUCH_NUM_AXES);
 	if (!priv->valuators)
 		return BadValue;
 
