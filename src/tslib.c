@@ -216,11 +216,21 @@ static void init_button_labels(Atom *labels, size_t size)
         labels[10] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_BACK);
 }
 
+static void init_axis_labels(Atom *labels, size_t size)
+{
+	assert(size >= 2);
+
+	memset(labels, 0, size * sizeof(Atom));
+	labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
+	labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
+}
+
 static int xf86TslibControlProc(DeviceIntPtr device, int what)
 {
 	InputInfoPtr pInfo;
 	unsigned char map[MAXBUTTONS + 1];
 	Atom labels[MAXBUTTONS];
+	Atom axis_labels[2];
 	int i, axiswidth, axisheight;
 	struct ts_priv *priv;
 
@@ -239,6 +249,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 			map[i + 1] = i + 1;
 
 		init_button_labels(labels, ARRAY_SIZE(labels));
+		init_axis_labels(axis_labels, ARRAY_SIZE(axis_labels));
 
 		if (InitButtonClassDeviceStruct(device,
 						MAXBUTTONS,
@@ -251,7 +262,7 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 
 		if (InitValuatorClassDeviceStruct(device,
 						  2,
-						  labels,
+						  axis_labels,
 						  0, Absolute) == FALSE) {
 			xf86IDrvMsg(pInfo, X_ERROR,
 				    "unable to allocate Valuator class device\n");
