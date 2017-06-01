@@ -68,7 +68,7 @@
 #define TOUCH_MAX_SLOTS 10	/* fallback if not found */
 #define TOUCH_SAMPLES_READ 3	/* up to, if available */
 #define MAXBUTTONS 11		/* > 10 */
-#define TOUCH_NUM_AXES 2	/* x, y */
+#define TOUCH_NUM_AXES 3	/* x, y, pressure */
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
 #define HAVE_THREADED_INPUT	1
@@ -120,6 +120,7 @@ static void ReadInputLegacy(InputInfoPtr local)
 		if (type != XI_TouchEnd) {
 			valuator_mask_set_double(m, 0, samp.x);
 			valuator_mask_set_double(m, 1, samp.y);
+			valuator_mask_set_double(m, 2, samp.pressure);
 		}
 
 		xf86PostTouchEvent(local->dev, 0, type, 0, m);
@@ -155,6 +156,7 @@ static void ReadHandleMTSample(InputInfoPtr local, int nr, int slot)
 	if (type != XI_TouchEnd) {
 		valuator_mask_set_double(m, 0, priv->samp_mt[nr][slot].x);
 		valuator_mask_set_double(m, 1, priv->samp_mt[nr][slot].y);
+		valuator_mask_set_double(m, 2, priv->samp_mt[nr][slot].pressure);
 	}
 
 	xf86PostTouchEvent(local->dev, priv->touchids[slot], type, 0, m);
@@ -288,6 +290,15 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 					       0,		/* min_res */
 					       priv->height,	/* max_res */
 					       Absolute);
+
+			InitValuatorAxisStruct(device, 2,
+					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE),
+					       0,		/* min val */
+					       255,		/* max val */
+					       256,		/* resolution */
+					       0,		/* min_res */
+					       256,		/* max_res */
+					       Absolute);
 		} else {
 			InitValuatorAxisStruct(device, 0,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
@@ -305,6 +316,15 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 					       priv->height,	/* resolution */
 					       0,		/* min_res */
 					       priv->height,	/* max_res */
+					       Absolute);
+
+			InitValuatorAxisStruct(device, 2,
+					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE),
+					       0,		/* min val */
+					       255,		/* max val */
+					       256,		/* resolution */
+					       0,		/* min_res */
+					       256,		/* max_res */
 					       Absolute);
 		}
 
