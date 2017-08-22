@@ -219,15 +219,6 @@ static void init_button_labels(Atom *labels, size_t size)
         labels[10] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_BACK);
 }
 
-static void init_axis_labels(Atom *labels, size_t size)
-{
-	assert(size >= TOUCH_NUM_AXES);
-
-	memset(labels, 0, size * sizeof(Atom));
-	labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
-	labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
-}
-
 static int xf86TslibControlProc(DeviceIntPtr device, int what)
 {
 	InputInfoPtr pInfo;
@@ -252,7 +243,18 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 			map[i + 1] = i + 1;
 
 		init_button_labels(labels, ARRAY_SIZE(labels));
-		init_axis_labels(axis_labels, ARRAY_SIZE(axis_labels));
+
+		/* init axis labels */
+		memset(axis_labels, 0, ARRAY_SIZE(axis_labels) * sizeof(Atom));
+		if (priv->abs_x_only) {
+			labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
+			labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
+			labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE);
+		} else {
+			labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
+			labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
+			labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE);
+		}
 
 		if (InitButtonClassDeviceStruct(device,
 						MAXBUTTONS,
