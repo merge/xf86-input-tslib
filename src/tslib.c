@@ -78,6 +78,7 @@ struct ts_priv {
 	struct tsdev *ts;
 	int height;
 	int width;
+	int pmax;
 	struct ts_sample last;
 	ValuatorMask *valuators;
 	int8_t abs_x_only;
@@ -296,10 +297,10 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 			InitValuatorAxisStruct(device, 2,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE),
 					       0,		/* min val */
-					       255,		/* max val */
-					       256,		/* resolution */
+					       priv->pmax,	/* max val */
+					       priv->pmax + 1,	/* resolution */
 					       0,		/* min_res */
-					       256,		/* max_res */
+					       priv->pmax + 1,	/* max_res */
 					       Absolute);
 		} else {
 			InitValuatorAxisStruct(device, 0,
@@ -323,10 +324,10 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 			InitValuatorAxisStruct(device, 2,
 					       XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE),
 					       0,		/* min val */
-					       255,		/* max val */
-					       256,		/* resolution */
+					       priv->pmax,	/* max val */
+					       priv->pmax + 1,	/* resolution */
 					       0,		/* min_res */
-					       256,		/* max_res */
+					       priv->pmax + 1,	/* max_res */
 					       Absolute);
 		}
 
@@ -540,6 +541,16 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 			return BadValue;
 		}
 		priv->height = absinfo.maximum;
+
+		if (!(absbit[BIT_WORD(ABS_PRESSURE)] & BIT_MASK(ABS_PRESSURE))) {
+			priv->pmax = 255; /* tslib internal */
+		} else {
+			if (ioctl(pInfo->fd, EVIOCGABS(ABS_PRESSURE), &absinfo) < 0) {
+				xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+				return BadValue;
+			}
+			priv->pmax = absinfo.maximum;
+		}
 	} else {
 		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
@@ -552,6 +563,16 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 			return BadValue;
 		}
 		priv->height = absinfo.maximum;
+
+		if (!(absbit[BIT_WORD(ABS_MT_PRESSURE)] & BIT_MASK(ABS_MT_PRESSURE))) {
+			priv->pmax = 255; /* tslib internal */
+		} else {
+			if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_PRESSURE), &absinfo) < 0) {
+				xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
+				return BadValue;
+			}
+			priv->pmax = absinfo.maximum;
+		}
 	}
 
 	/* Return the configured device */
