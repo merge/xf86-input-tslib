@@ -248,13 +248,13 @@ static int xf86TslibControlProc(DeviceIntPtr device, int what)
 		/* init axis labels */
 		memset(axis_labels, 0, ARRAY_SIZE(axis_labels) * sizeof(Atom));
 		if (priv->abs_x_only) {
-			labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
-			labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
-			labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE);
+			axis_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
+			axis_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
+			axis_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE);
 		} else {
-			labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
-			labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
-			labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE);
+			axis_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
+			axis_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
+			axis_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE);
 		}
 
 		if (InitButtonClassDeviceStruct(device,
