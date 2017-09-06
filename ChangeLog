@@ -1,3 +1,10 @@
+2017-09-06  Martin Kepplinger <martink@posteo.de>
+
+	xf86-input-tslib 1.1.0 includes the following changes:
+	* add pressure valuator
+
+	* bugfixes in memory allocation and axis names
+
 2017-05-07  Martin Kepplinger <martink@posteo.de>
 
 	xf86-input-tslib 1.0.0 includes the following changes:
