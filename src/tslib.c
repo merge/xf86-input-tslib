@@ -485,7 +485,7 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 #ifdef TSLIB_VERSION_MT
 	int i;
 
-	priv->samp_mt = malloc(priv->slots * sizeof(struct ts_sample_mt *));
+	priv->samp_mt = malloc(TOUCH_SAMPLES_READ * sizeof(struct ts_sample_mt *));
 	if (!priv->samp_mt)
 		return BadValue;
 
