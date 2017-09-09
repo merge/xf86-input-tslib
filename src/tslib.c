@@ -179,8 +179,13 @@ static void ReadInputMT(InputInfoPtr local)
 
 		for (i = 0; i < ret; i++) {
 			for (j = 0; j < priv->slots; j++) {
+			#ifdef TSLIB_MT_VALID
+				if (!(priv->samp_mt[i][j].valid & TSLIB_MT_VALID))
+					continue;
+			#else
 				if (priv->samp_mt[i][j].valid != 1)
 					continue;
+			#endif
 
 				ReadHandleMTSample(local, i, j);
 
