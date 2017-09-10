@@ -183,7 +183,7 @@ static void ReadInputMT(InputInfoPtr local)
 				if (!(priv->samp_mt[i][j].valid & TSLIB_MT_VALID))
 					continue;
 			#else
-				if (priv->samp_mt[i][j].valid != 1)
+				if (priv->samp_mt[i][j].valid < 1)
 					continue;
 			#endif
 
