@@ -442,7 +442,8 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 		return BadValue;
 	}
 
-	xf86IDrvMsg(pInfo, X_INFO, "using libts version %X\n", ver->version_num);
+	xf86IDrvMsg(pInfo, X_INFO, "using libts ABI version %d (%06X)\n",
+		    ver->version_num >> 16, ver->version_num);
 #else
 	priv->ts = ts_open(s, 1);
 	if (!priv->ts) {
