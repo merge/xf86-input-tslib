@@ -24,6 +24,8 @@
  * TORTIOUS  ACTION, ARISING    OUT OF OR   IN  CONNECTION  WITH THE USE    OR
  * PERFORMANCE OF THIS SOFTWARE.
  *
+ * SPDX-License-Identifier: MIT
+ * License-Filename: COPYING
  */
 
 /* tslib input driver */
