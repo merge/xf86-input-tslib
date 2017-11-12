@@ -475,13 +475,16 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	if (!priv->valuators)
 		return BadValue;
 
-	/* FIXME get the path from libts */
+#ifdef TSLIB_VERSION_EVENTPATH
+	pInfo->fd = open(ts_get_eventpath(priv->ts), O_RDONLY);
+#else
 	if (!s) {
 		xf86IDrvMsg(pInfo, X_ERROR, "Please provide Option path or Device");
 		return BadValue;
 	}
 
 	pInfo->fd = open(s, O_RDONLY);
+#endif
 	if (pInfo->fd == -1) {
 		xf86IDrvMsg(pInfo, X_ERROR, "Couldn't open %s\n", s);
 		return BadValue;
