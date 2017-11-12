@@ -50,6 +50,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
+#include <fcntl.h>
 
 #if defined (__FreeBSD__)
 #include <dev/evdev/input.h>
@@ -388,6 +389,7 @@ xf86TslibUninit(__attribute__ ((unused)) InputDriverPtr drv,
 	free(priv->samp_mt);
 	free(priv->last_mt);
 #endif
+	close(pInfo->fd);
 	valuator_mask_free(&priv->valuators);
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
@@ -463,8 +465,6 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 
 	priv->slots = 0;
 
-	pInfo->fd = ts_fd(priv->ts);
-
 	ts_error_fn = errfn;
 
 	/* process generic options */
@@ -474,6 +474,18 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	priv->valuators = valuator_mask_new(TOUCH_NUM_AXES);
 	if (!priv->valuators)
 		return BadValue;
+
+	/* FIXME get the path from libts */
+	if (!s) {
+		xf86IDrvMsg(pInfo, X_ERROR, "Please provide Option path or Device");
+		return BadValue;
+	}
+
+	pInfo->fd = open(s, O_RDONLY);
+	if (pInfo->fd == -1) {
+		xf86IDrvMsg(pInfo, X_ERROR, "Couldn't open %s\n", s);
+		return BadValue;
+	}
 
 	if (ioctl(pInfo->fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) < 0) {
 		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOCGBIT failed");
