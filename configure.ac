@@ -22,7 +22,7 @@
 # Process this file with autoconf to produce a configure script
 
 AC_PREREQ(2.59)
-AC_INIT([xf86-input-tslib],[1.1.1],[https://github.com/merge/xf86-input-tslib/issues],[xf86-input-tslib],[https://github.com/merge/xf86-input-tslib])
+AC_INIT([xf86-input-tslib],[1.2.0-rc1],[https://github.com/merge/xf86-input-tslib/issues],[xf86-input-tslib],[https://github.com/merge/xf86-input-tslib])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)

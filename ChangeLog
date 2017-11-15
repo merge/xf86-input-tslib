@@ -1,3 +1,9 @@
+2017-11-15  Martin Kepplinger <martink@posteo.de>
+	xf86-input-tslib 1.2.0 includes the following changes:
+	* fix usage of ts_fd() and use temporary fd for ioctls
+
+	* Use ts_get_eventpath() for ioctls for tslib >= 1.15
+
 2017-09-10  Martin Kepplinger <martink@posteo.de>
 	xf86-input-tslib 1.1.1 includes the following changes:
 	* fix tslib sample's valid flag check
