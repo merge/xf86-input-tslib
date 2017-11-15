@@ -389,7 +389,6 @@ xf86TslibUninit(__attribute__ ((unused)) InputDriverPtr drv,
 	free(priv->samp_mt);
 	free(priv->last_mt);
 #endif
-	close(pInfo->fd);
 	valuator_mask_free(&priv->valuators);
 	xf86TslibControlProc(pInfo->dev, DEVICE_OFF);
 	ts_close(priv->ts);
@@ -421,6 +420,7 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	struct ts_lib_version_data *ver = ts_libversion();
 #endif
 	long absbit[BITS_TO_LONGS(ABS_CNT)];
+	int fd_temp;
 
 	priv = calloc(1, sizeof (struct ts_priv));
 	if (!priv)
@@ -475,22 +475,24 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	if (!priv->valuators)
 		return BadValue;
 
+	pInfo->fd = ts_fd(priv->ts);
+
 #ifdef TSLIB_VERSION_EVENTPATH
-	pInfo->fd = open(ts_get_eventpath(priv->ts), O_RDONLY);
+	fd_temp = open(ts_get_eventpath(priv->ts), O_RDONLY);
 #else
 	if (!s) {
 		xf86IDrvMsg(pInfo, X_ERROR, "Please provide Option path or Device");
 		return BadValue;
 	}
 
-	pInfo->fd = open(s, O_RDONLY);
+	fd_temp = open(s, O_RDONLY);
 #endif
-	if (pInfo->fd == -1) {
+	if (fd_temp == -1) {
 		xf86IDrvMsg(pInfo, X_ERROR, "Couldn't open %s\n", s);
 		return BadValue;
 	}
 
-	if (ioctl(pInfo->fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) < 0) {
+	if (ioctl(fd_temp, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) < 0) {
 		xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOCGBIT failed");
 		return BadValue;
 	}
@@ -553,13 +555,13 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	}
 
 	if (priv->abs_x_only) {
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_X), &absinfo) < 0) {
+		if (ioctl(fd_temp, EVIOCGABS(ABS_X), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
 		priv->width = absinfo.maximum;
 
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_Y), &absinfo) < 0) {
+		if (ioctl(fd_temp, EVIOCGABS(ABS_Y), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
@@ -575,13 +577,13 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 			priv->pmax = absinfo.maximum;
 		}
 	} else {
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_X), &absinfo) < 0) {
+		if (ioctl(fd_temp, EVIOCGABS(ABS_MT_POSITION_X), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
 		priv->width = absinfo.maximum;
 
-		if (ioctl(pInfo->fd, EVIOCGABS(ABS_MT_POSITION_Y), &absinfo) < 0) {
+		if (ioctl(fd_temp, EVIOCGABS(ABS_MT_POSITION_Y), &absinfo) < 0) {
 			xf86IDrvMsg(pInfo, X_ERROR, "ioctl EVIOGABS failed");
 			return BadValue;
 		}
@@ -597,6 +599,8 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 			priv->pmax = absinfo.maximum;
 		}
 	}
+
+	close(fd_temp);
 
 	/* Return the configured device */
 	return Success;
