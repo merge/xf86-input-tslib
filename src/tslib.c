@@ -481,7 +481,7 @@ static int xf86TslibInit(__attribute__ ((unused)) InputDriverPtr drv,
 	fd_temp = open(ts_get_eventpath(priv->ts), O_RDONLY);
 #else
 	if (!s) {
-		xf86IDrvMsg(pInfo, X_ERROR, "Please provide Option path or Device");
+		xf86IDrvMsg(pInfo, X_ERROR, "Please upgrade tslib (or provide Option \"Device\")");
 		return BadValue;
 	}
 
